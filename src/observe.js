@@ -10,6 +10,8 @@ export function observeSelector(selector, onAdd) {
    
   for (const element of parent.querySelectorAll(selector)) removeHandlers.set(element, onAdd(element))
 
+  console.log(removeHandlers)
+
   const observer = new MutationObserver(() => {
     const found = new Set()
     for (const element of parent.querySelectorAll(selector)) {

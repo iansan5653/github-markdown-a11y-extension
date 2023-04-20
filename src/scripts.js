@@ -7,8 +7,6 @@ import markdownlintGitHub from "@github/markdownlint-github";
 import {getCharacterCoordinates} from "./character-coordinates";
 import {observeSelector} from "./observe";
 
-console.log("big deal")
-
 /** @param {string} markdown */
 const lintString = (markdown) => 
   markdownlint.sync({
@@ -44,14 +42,12 @@ const lintEditor = (editor, portal) => {
       endCoords = getCharacterCoordinates(editor, --endIndex)
     }
 
-    console.log(startIndex, endIndex, markdown.slice(startIndex, endIndex + 1))
-
     const annotation = document.createElement('span')
     annotation.style.position = 'absolute'
-    annotation.style.top = `${startCoords.top - 2}px`
+    annotation.style.top = `${startCoords.top - 4}px`
     annotation.style.left = `${startCoords.left}px`
     annotation.style.width = `${endCoords.left - startCoords.left}px`
-    annotation.style.borderBottom = '2px dashed red'
+    annotation.style.borderBottom = '2px dashed var(--color-danger-emphasis)'
     annotation.style.height = `${startCoords.height}px`
     annotation.style.pointerEvents = 'none'
     portal.appendChild(annotation)
@@ -61,6 +57,10 @@ const lintEditor = (editor, portal) => {
 const markdownEditorsSelector = 'textarea.js-paste-markdown, textarea.CommentBox-input'
 
 observeSelector(markdownEditorsSelector, editor => {
+  const editorRect = editor.getBoundingClientRect()
+  // ignore hidden inputs
+  if (editorRect.height < 5 || editorRect.width < 5) return () => {}
+
   const portal = document.createElement('div')
   document.body.appendChild(portal)
 
