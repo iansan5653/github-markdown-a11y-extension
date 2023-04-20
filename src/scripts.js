@@ -19,9 +19,9 @@ const lint = (markdown) =>
 
 
 const textarea = /** @type {HTMLTextAreaElement} */ (document.getElementById('demo-target'))
-const portal = document.getElementById('portal')
+const portal = document.getElementById('portal');
 
-textarea?.addEventListener('input', () => {
+(() => {
   if (!portal || !textarea) throw new Error("missing textarea or portal target element")
 
   const markdown = textarea.value
@@ -34,10 +34,10 @@ textarea?.addEventListener('input', () => {
     const [line, ...prevLines] = lines.slice(0, lineNumber).reverse()
     const prevLineChars = prevLines.reduce((t, l) => t + l.length + 1 /* add one for newline char */, 0)
     const lineStart = errorRange?.[0] ?? 0
-    const startIndex = prevLineChars + (errorRange?.[0] ?? 0)
+    const startIndex = prevLineChars + (errorRange?.[0] ?? 1) - 1
     const startCoords = getCharacterCoordinates(textarea, startIndex)
     
-    let endIndex = startIndex + (errorRange?.[1] ?? (line.length - lineStart)) 
+    let endIndex = startIndex + (errorRange?.[1] ?? (line.length - lineStart + 1)) - 1
     let endCoords = getCharacterCoordinates(textarea, endIndex)
     while (endCoords.height > startCoords.height) {
       endCoords = getCharacterCoordinates(textarea, --endIndex)
@@ -55,4 +55,4 @@ textarea?.addEventListener('input', () => {
     annotation.style.pointerEvents = 'none'
     portal.appendChild(annotation)
   }
-})
+})()
