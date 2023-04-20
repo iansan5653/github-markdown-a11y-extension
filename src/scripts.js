@@ -26,7 +26,7 @@ const lintEditor = (editor, portal) => {
   const markdown = editor.value
   const errors = lintString(markdown)
 
-  for (const annotation of portal.children) portal.removeChild(annotation)
+  portal.replaceChildren()
 
   const lines = markdown.split('\n')
   for (const {lineNumber, errorRange} of errors) {
@@ -44,10 +44,11 @@ const lintEditor = (editor, portal) => {
 
     const annotation = document.createElement('span')
     annotation.style.position = 'absolute'
-    annotation.style.top = `${startCoords.top - 4}px`
+    annotation.style.top = `${startCoords.top - 2}px`
     annotation.style.left = `${startCoords.left}px`
     annotation.style.width = `${endCoords.left - startCoords.left}px`
-    annotation.style.borderBottom = '2px dashed var(--color-danger-emphasis)'
+    annotation.style.backgroundColor = 'var(--color-danger-emphasis)'
+    annotation.style.opacity = '0.2'
     annotation.style.height = `${startCoords.height}px`
     annotation.style.pointerEvents = 'none'
     portal.appendChild(annotation)
