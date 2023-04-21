@@ -86,6 +86,7 @@ export class LintedMarkdownEditor {
 
   #onMouseMove = (event: MouseEvent) =>
     this.#updatePointerTooltip(event.clientX, event.clientY);
+
   #onMouseLeave = () => this.#hideTooltip();
 
   #onSelectionChange = () => {

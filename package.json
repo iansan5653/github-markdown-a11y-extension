@@ -5,7 +5,7 @@
   "scripts": {
     "build": "webpack",
     "format": "prettier --write src/*",
-    "typecheck": "tsc"
+    "typecheck": "tsc --noEmit"
   },
   "author": "iansan5653@github.com",
   "license": "MIT",
