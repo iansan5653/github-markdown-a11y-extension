@@ -1,0 +1,21 @@
+name: CI Checks
+
+on:
+  push:
+    branches: main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+
+      - name: Check code formatting
+        run: npm run check:formatting
+
+      - name: Check types
+        run: npm run check:types
