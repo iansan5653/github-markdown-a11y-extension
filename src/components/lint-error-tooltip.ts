@@ -28,7 +28,7 @@ export class LintErrorTooltip {
     nameText: string,
     descriptionText: string,
     detailsText: string,
-    {top, left}: {top: number; left: number}
+    { top, left }: { top: number; left: number }
   ) {
     // so screen readers know what the live update means
     const accessiblePrefix = document.createElement("span");

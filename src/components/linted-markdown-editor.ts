@@ -2,10 +2,10 @@
 
 "use strict";
 
-import {getCharacterCoordinates} from "../utilities/character-coordinates";
-import {formatList} from "../utilities/format";
-import {lintMarkdown} from "../utilities/lint-markdown";
-import {LintErrorTooltip} from "./lint-error-tooltip";
+import { getCharacterCoordinates } from "../utilities/character-coordinates";
+import { formatList } from "../utilities/format";
+import { lintMarkdown } from "../utilities/lint-markdown";
+import { LintErrorTooltip } from "./lint-error-tooltip";
 
 let idCounter = 0;
 
@@ -212,7 +212,7 @@ export class LintedMarkdownEditor {
         forAnnotation.dataset.errorName ?? "",
         forAnnotation.dataset.errorDescription ?? "",
         forAnnotation.dataset.errorDetails ?? "",
-        {top: rect.top + rect.height + scrollY, left: rect.left + scrollX}
+        { top: rect.top + rect.height + scrollY, left: rect.left + scrollX }
       );
       this.#currentTooltipAnnotation = forAnnotation;
     }

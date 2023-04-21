@@ -151,7 +151,7 @@ export function getCharacterCoordinates(
   span.textContent = element.value.substring(index) || "."; // because a completely empty faux span doesn't render at all
   div.appendChild(span);
 
-  const {top: viewportOffsetTop, left: viewportOffsetLeft} =
+  const { top: viewportOffsetTop, left: viewportOffsetLeft } =
     element.getBoundingClientRect();
 
   const coordinates = {
