@@ -244,7 +244,7 @@ document.addEventListener("selectionchange", () => {
           annotation.dataset.errorName,
           annotation.dataset.errorDescription,
           annotation.dataset.errorDetails,
-          {top: rect.top + rect.height, left: rect.left}
+          {top: rect.top + rect.height + scrollY, left: rect.left + scrollX}
         );
         currentTooltipAnnotation = annotation;
         return;

@@ -1,10 +1,11 @@
 {
-  "$schema": "https://json.schemastore.org/chrome-manifest",
   "name": "Markdown Accessibility Checker for GitHub",
   "manifest_version": 3,
   "version": "0.0.1",
-  "content_scripts": [{
-    "matches": ["https://*.github.com/*"],
-    "js": ["dist/scripts.min.js"]
-  }]
+  "content_scripts": [
+    {
+      "matches": ["https://*.github.com/*"],
+      "js": ["dist/scripts.min.js"]
+    }
+  ]
 }
