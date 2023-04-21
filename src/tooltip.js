@@ -6,14 +6,11 @@ import markdownlint from "markdownlint";
 export class LintErrorTooltip {
   #tooltip;
 
-  /** @type {boolean} */
-  #_visible;
-
   constructor() {
     this.#tooltip = document.createElement("div");
 
     this.#tooltip.setAttribute("aria-live", "polite");
-    this.#tooltip.setAttribute("hidden", "true");
+    this.hide()
 
     this.#tooltip.style.backgroundColor = "var(--color-canvas-default)";
     this.#tooltip.style.padding = "8px";
@@ -27,10 +24,6 @@ export class LintErrorTooltip {
     document.addEventListener("keydown", (e) => this.#onGlobalKeydown(e));
 
     document.body.appendChild(this.#tooltip);
-  }
-
-  get #visible() {
-    return this.#_visible;
   }
 
   /**
