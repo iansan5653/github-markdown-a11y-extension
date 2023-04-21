@@ -39,18 +39,18 @@ export class LintErrorTooltip {
    * @param {string} detailsText
    * @param {{top: number, left: number}} position
    */
-  show(nameText, descriptionText, detailsText, {top, left}) {
+  show(nameText, descriptionText, detailsText, { top, left }) {
     // so screen readers know what the live update means
-    const accessiblePrefix = document.createElement('span')
-    accessiblePrefix.textContent = "Markdown problem: "
-    accessiblePrefix.style.clipPath = 'circle(0)'
-    accessiblePrefix.style.position = 'absolute'
+    const accessiblePrefix = document.createElement("span");
+    accessiblePrefix.textContent = "Markdown problem: ";
+    accessiblePrefix.style.clipPath = "circle(0)";
+    accessiblePrefix.style.position = "absolute";
 
     const description = document.createElement("div");
     description.textContent = descriptionText;
     description.style.fontWeight = "bold";
     description.style.color = "var(--color-danger-fg)";
-    
+
     const details = document.createElement("div");
     details.textContent = detailsText;
 

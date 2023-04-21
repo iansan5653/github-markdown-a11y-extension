@@ -2,46 +2,45 @@
 // into their shorthand (e.g. padding-top, padding-bottom etc. -> padding),
 // so we have to list every single property explicitly.
 const propertiesToCopy = [
-  'direction', // RTL support
-  'boxSizing',
-  'width', // on Chrome and IE, exclude the scrollbar, so the mirror div wraps exactly as the textarea does
-  'height',
-  'overflowX',
-  'overflowY', // copy the scrollbar for IE
+  "direction", // RTL support
+  "boxSizing",
+  "width", // on Chrome and IE, exclude the scrollbar, so the mirror div wraps exactly as the textarea does
+  "height",
+  "overflowX",
+  "overflowY", // copy the scrollbar for IE
 
-  'borderTopWidth',
-  'borderRightWidth',
-  'borderBottomWidth',
-  'borderLeftWidth',
-  'borderStyle',
+  "borderTopWidth",
+  "borderRightWidth",
+  "borderBottomWidth",
+  "borderLeftWidth",
+  "borderStyle",
 
-  'paddingTop',
-  'paddingRight',
-  'paddingBottom',
-  'paddingLeft',
+  "paddingTop",
+  "paddingRight",
+  "paddingBottom",
+  "paddingLeft",
 
   // https://developer.mozilla.org/en-US/docs/Web/CSS/font
-  'fontStyle',
-  'fontVariant',
-  'fontWeight',
-  'fontStretch',
-  'fontSize',
-  'fontSizeAdjust',
-  'lineHeight',
-  'fontFamily',
+  "fontStyle",
+  "fontVariant",
+  "fontWeight",
+  "fontStretch",
+  "fontSize",
+  "fontSizeAdjust",
+  "lineHeight",
+  "fontFamily",
 
-  'textAlign',
-  'textTransform',
-  'textIndent',
-  'textDecoration', // might not make a difference, but better be safe
+  "textAlign",
+  "textTransform",
+  "textIndent",
+  "textDecoration", // might not make a difference, but better be safe
 
-  'letterSpacing',
-  'wordSpacing',
+  "letterSpacing",
+  "wordSpacing",
 
-  'tabSize',
-  'MozTabSize', // prefixed version for Firefox <= 52
-]
-
+  "tabSize",
+  "MozTabSize", // prefixed version for Firefox <= 52
+];
 
 /**
  * Obtain the coordinates (px) of the top left of a character in an input, relative to
@@ -149,7 +148,7 @@ export function getCharacterCoordinates(element, index) {
   span.textContent = element.value.substring(index) || "."; // because a completely empty faux span doesn't render at all
   div.appendChild(span);
 
-  const {top: viewportOffsetTop, left: viewportOffsetLeft} =
+  const { top: viewportOffsetTop, left: viewportOffsetLeft } =
     element.getBoundingClientRect();
 
   const coordinates = {
