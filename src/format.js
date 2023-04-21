@@ -1,3 +1,7 @@
+/**
+ * @param {string[]} items
+ * @param {string} conjunction
+ */
 export const formatList = (items, conjunction) => {
   if (items.length > 2) {
     items.push(`${conjunction} ${items.pop()}`);
