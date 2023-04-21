@@ -7,6 +7,7 @@ import markdownlintGitHub from "@github/markdownlint-github";
 import {getCharacterCoordinates} from "./character-coordinates";
 import {observeSelector} from "./observe";
 import {LintErrorTooltip} from "./tooltip";
+import {formatList} from "./format";
 
 const rootPortal = document.createElement('div')
 document.body.appendChild(rootPortal)
@@ -24,13 +25,14 @@ const lintString = (markdown) =>
 
 /**
  * @param {HTMLTextAreaElement} editor
- * @param {HTMLElement} portal
+ * @param {HTMLElement} annotationsPortal
+ * @param {HTMLElement} accessibleDescriptionContainer
  */
-const lintEditor = (editor, portal) => {
+const lintEditor = (editor, annotationsPortal, accessibleDescriptionContainer) => {
   const markdown = editor.value
   const errors = lintString(markdown)
 
-  portal.replaceChildren()
+  annotationsPortal.replaceChildren()
 
   const lines = markdown.split('\n')
   for (const error of errors) {
@@ -82,9 +84,11 @@ const lintEditor = (editor, portal) => {
       annotation.dataset.startIndex = startIndex.toString()
       annotation.dataset.endIndex = endIndex.toString()
 
-      portal.appendChild(annotation)
+      annotationsPortal.appendChild(annotation)
     }
   }
+
+  accessibleDescriptionContainer.textContent = `${errors.length} Markdown problem${errors.length > 1 ? 's' : ''} identified: see line${errors.length > 1 ? 's' : ''} ${formatList(errors.map(e => e.lineNumber), "and")}`
 }
 
 const markdownEditorsSelector = 'textarea.js-paste-markdown, textarea.CommentBox-input'
@@ -97,20 +101,29 @@ observeSelector(markdownEditorsSelector, editor => {
 
   editor.dataset.markdownLintingId = (++idCounter).toString()
 
-  editor.addEventListener('blur', () => {
-    tooltip.hide()
-    currentTooltipAnnotation = null
-  })
-
   const portal = document.createElement('div')
   portal.dataset.markdownLintingPortalId = editor.dataset.markdownLintingId
   rootPortal.appendChild(portal)
 
-  const refreshLint = () => lintEditor(/** @type {HTMLTextAreaElement} */(editor), portal)
-  
-  refreshLint()
+  const accessibleDescriptionContainer = document.createElement('div')
+  accessibleDescriptionContainer.setAttribute('aria-live', 'polite')
+  accessibleDescriptionContainer.style.position = 'absolute'
+  accessibleDescriptionContainer.style.clipPath = 'circle(0)'
+  rootPortal.appendChild(accessibleDescriptionContainer)
 
-  document.addEventListener('input', refreshLint)
+  const refreshLint = () => {
+    if (document.activeElement !== editor) return
+    lintEditor(/** @type {HTMLTextAreaElement} */(editor), portal, accessibleDescriptionContainer)
+  }
+
+  editor.addEventListener('input', refreshLint)
+  editor.addEventListener('focus', refreshLint)
+
+  editor.addEventListener('blur', () => {
+    portal.replaceChildren()
+    tooltip.hide()
+    currentTooltipAnnotation = null
+  })
 
   const resizeObserver = new ResizeObserver(refreshLint)
   resizeObserver.observe(editor)
@@ -118,6 +131,7 @@ observeSelector(markdownEditorsSelector, editor => {
   return () => {
     document.removeEventListener('input', refreshLint)
     rootPortal.removeChild(portal)
+    rootPortal.removeChild(accessibleDescriptionContainer)
     resizeObserver.disconnect()
   }
 })

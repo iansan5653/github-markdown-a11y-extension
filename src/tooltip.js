@@ -12,7 +12,7 @@ export class LintErrorTooltip {
   constructor() {
     this.#tooltip = document.createElement("div");
 
-    this.#tooltip.setAttribute("role", "status");
+    this.#tooltip.setAttribute("aria-live", "polite");
     this.#tooltip.setAttribute("hidden", "true");
 
     this.#tooltip.style.backgroundColor = "var(--color-canvas-default)";
