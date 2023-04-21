@@ -20,7 +20,7 @@ export class LintErrorTooltip {
     this.#tooltip.style.border = "1px solid var(--color-fg-subtle)";
     this.#tooltip.style.borderRadius = "6px";
     this.#tooltip.style.boxShadow = "var(--color-shadow-medium)";
-    this.#tooltip.style.position = "fixed";
+    this.#tooltip.style.position = "absolute";
     this.#tooltip.style.pointerEvents = "none";
     this.#tooltip.style.userSelect = "none";
 

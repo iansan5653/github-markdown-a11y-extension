@@ -4,10 +4,10 @@
 
 import markdownlint from "markdownlint";
 import markdownlintGitHub from "@github/markdownlint-github";
-import { getCharacterCoordinates } from "./character-coordinates";
-import { observeSelector } from "./observe";
-import { LintErrorTooltip } from "./tooltip";
-import { formatList } from "./format";
+import {getCharacterCoordinates} from "./character-coordinates";
+import {observeSelector} from "./observe";
+import {LintErrorTooltip} from "./tooltip";
+import {formatList} from "./format";
 
 const rootPortal = document.createElement("div");
 document.body.appendChild(rootPortal);
@@ -82,6 +82,8 @@ const lintEditor = (
       }
     }
 
+    const editorRect = editor.getBoundingClientRect();
+
     // render an annotation for each line separately
     for (let {
       left,
@@ -91,10 +93,20 @@ const lintEditor = (
       startIndex,
       endIndex,
     } of errorLineChunks) {
+      // suppress when out of bounds
+      if (
+        top < editorRect.top ||
+        top + height > editorRect.bottom ||
+        left < editorRect.left ||
+        left + width > editorRect.right
+      )
+        continue;
+
       const annotation = document.createElement("span");
       annotation.style.position = "absolute";
-      annotation.style.top = `${top - 2}px`;
-      annotation.style.left = `${left}px`;
+      // account for window scroll because they are absolute, not fixed
+      annotation.style.top = `${top + scrollY - 2}px`;
+      annotation.style.left = `${left + scrollX}px`;
       annotation.style.width = `${width}px`;
       annotation.style.backgroundColor = "var(--color-danger-emphasis)";
       annotation.style.opacity = "0.2";
@@ -154,6 +166,7 @@ observeSelector(markdownEditorsSelector, (editor) => {
 
   editor.addEventListener("input", refreshLint);
   editor.addEventListener("focus", refreshLint);
+  editor.addEventListener("scroll", refreshLint);
 
   editor.addEventListener("blur", () => {
     portal.replaceChildren();
@@ -195,7 +208,7 @@ document.addEventListener("mousemove", (event) => {
             annotation.dataset.errorName,
             annotation.dataset.errorDescription,
             annotation.dataset.errorDetails,
-            { top: rect.top + rect.height, left: rect.left }
+            {top: rect.top + rect.height + scrollY, left: rect.left + scrollX}
           );
           currentTooltipAnnotation = annotation;
         }
@@ -231,7 +244,7 @@ document.addEventListener("selectionchange", () => {
           annotation.dataset.errorName,
           annotation.dataset.errorDescription,
           annotation.dataset.errorDetails,
-          { top: rect.top + rect.height, left: rect.left }
+          {top: rect.top + rect.height, left: rect.left}
         );
         currentTooltipAnnotation = annotation;
         return;
