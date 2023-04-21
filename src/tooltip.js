@@ -35,29 +35,29 @@ export class LintErrorTooltip {
 
   /**
    * @param {string} nameText
-   * @param {string} titleText
-   * @param {string} bodyText
+   * @param {string} descriptionText
+   * @param {string} detailsText
    * @param {{top: number, left: number}} position
    */
-  show(nameText, titleText, bodyText, {top, left}) {
-    const name = document.createElement("div");
+  show(nameText, descriptionText, detailsText, {top, left}) {
+    const description = document.createElement("div");
+    description.textContent = descriptionText;
+    description.style.fontWeight = "bold";
+    description.style.color = "var(--color-danger-fg)";
+    
+    const details = document.createElement("div");
+    details.textContent = detailsText;
+
+    const name = document.createElement("code");
     name.textContent = nameText;
     name.style.fontSize = "12px";
     name.style.color = "var(--color-fg-muted)";
 
-    const title = document.createElement("div");
-    title.textContent = titleText;
-    title.style.fontWeight = "bold";
-    title.style.color = "var(--color-danger-fg)";
-
-    const body = document.createElement("div");
-    body.textContent = bodyText;
-
-    this.#tooltip.replaceChildren(name, title, body);
+    this.#tooltip.replaceChildren(description, details, name);
 
     this.#tooltip.style.top = `${top}px`;
     this.#tooltip.style.left = `${left}px`;
-    this.#tooltip.style.width = `300px`;
+    this.#tooltip.style.width = `350px`;
     this.#tooltip.style.maxWidth = `${document.body.clientWidth - left - 16}px`;
 
     this.#tooltip.removeAttribute("hidden");

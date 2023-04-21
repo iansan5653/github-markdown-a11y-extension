@@ -30,8 +30,6 @@ const lintEditor = (editor, portal) => {
   const markdown = editor.value
   const errors = lintString(markdown)
 
-  console.log(errors)
-
   portal.replaceChildren()
 
   const lines = markdown.split('\n')
