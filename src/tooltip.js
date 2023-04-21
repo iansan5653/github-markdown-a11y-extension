@@ -1,8 +1,6 @@
 //@ts-check
 "use strict";
 
-import markdownlint from "markdownlint";
-
 export class LintErrorTooltip {
   #tooltip;
 
