@@ -21,6 +21,8 @@ export class LintErrorTooltip {
     this.#tooltip.style.borderRadius = "6px";
     this.#tooltip.style.boxShadow = "var(--color-shadow-medium)";
     this.#tooltip.style.position = "fixed";
+    this.#tooltip.style.pointerEvents = "none";
+    this.#tooltip.style.userSelect = "none";
 
     document.addEventListener("keydown", (e) => this.#onGlobalKeydown(e));
 
