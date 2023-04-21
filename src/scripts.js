@@ -56,22 +56,32 @@ const lintEditor = (editor, portal) => {
     annotation.style.height = `${startCoords.height}px`
     annotation.style.pointerEvents = 'none'
 
-    annotation.dataset.isMarkdownLintError = 'true'
     annotation.dataset.errorTitle = error.ruleDescription
     annotation.dataset.errorBody = error.errorDetail
+    annotation.dataset.startIndex = startIndex.toString()
+    annotation.dataset.endIndex = endIndex.toString()
 
     portal.appendChild(annotation)
   }
 }
 
 const markdownEditorsSelector = 'textarea.js-paste-markdown, textarea.CommentBox-input'
+let idCounter = 1
 
 observeSelector(markdownEditorsSelector, editor => {
   const editorRect = editor.getBoundingClientRect()
   // ignore hidden inputs
   if (editorRect.height < 5 || editorRect.width < 5) return () => {}
 
+  editor.dataset.markdownLintingId = (++idCounter).toString()
+
+  editor.addEventListener('blur', () => {
+    tooltip.hide()
+    currentTooltipAnnotation = null
+  })
+
   const portal = document.createElement('div')
+  portal.dataset.markdownLintingPortalId = editor.dataset.markdownLintingId
   rootPortal.appendChild(portal)
 
   const refreshLint = () => lintEditor(/** @type {HTMLTextAreaElement} */(editor), portal)
@@ -110,6 +120,28 @@ document.addEventListener('mousemove', event => {
         return
       }
     }
+
+  tooltip.hide()
+  currentTooltipAnnotation = null
+})
+
+document.addEventListener('selectionchange', () => {
+  const focusedElement = document.activeElement
+  if (focusedElement instanceof HTMLTextAreaElement && focusedElement.dataset.markdownLintingId) {
+    if (focusedElement.selectionEnd !== focusedElement.selectionStart) return
+    const caretIndex = focusedElement.selectionStart
+
+    const portal = document.querySelector(`[data-markdown-linting-portal-id="${focusedElement.dataset.markdownLintingId}"]`)
+    if (!portal) return
+
+    for (const annotation of portal.children)
+      if (parseInt(annotation.dataset.startIndex) <= caretIndex && parseInt(annotation.dataset.endIndex) >= caretIndex) {
+        const rect = annotation.getBoundingClientRect()
+        tooltip.show(annotation.dataset.errorTitle, annotation.dataset.errorBody, {top: rect.top + rect.height, left: rect.left})
+        currentTooltipAnnotation = annotation
+        return
+      }
+  }
 
   tooltip.hide()
   currentTooltipAnnotation = null
