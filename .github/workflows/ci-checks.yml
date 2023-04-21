@@ -14,6 +14,8 @@ jobs:
 
       - uses: actions/setup-node@v3
 
+      - run: npm ci
+
       - name: Check code formatting
         run: npm run check:formatting
 
