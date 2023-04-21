@@ -8,7 +8,7 @@ const {name} = require('./package.json')
 
 const nodeModulePrefixRe = /^node:/u;
 
-const baseConfig = (outputFilename) => ({
+module.exports = [{
   entry: "./src/scripts.js",
   devtool: false,
   externals: {},
@@ -28,7 +28,7 @@ const baseConfig = (outputFilename) => ({
   },
   name,
   output: {
-    filename: outputFilename,
+    filename: "dist/scripts.min.js",
     library: {
       name: name.replace(/(-\w)/g, (m) => m.slice(1).toUpperCase()),
       type: "var",
@@ -52,15 +52,6 @@ const baseConfig = (outputFilename) => ({
       util: false,
     },
   },
-})
-
-const devConfig = {
-  ...baseConfig("dist/scripts.js"),
-  mode: "development",
-};
-
-const prodConfig = {
-  ...baseConfig("dist/scripts.min.js"),
   mode: "production",
   optimization: {
     minimizer: [
@@ -74,9 +65,4 @@ const prodConfig = {
       }),
     ],
   },
-};
-
-module.exports = [
-  devConfig,
-  prodConfig,
-];
+}];
