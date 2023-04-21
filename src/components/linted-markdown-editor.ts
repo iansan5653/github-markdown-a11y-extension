@@ -2,51 +2,39 @@
 
 "use strict";
 
-import { getCharacterCoordinates } from "../utilities/character-coordinates";
-import { formatList } from "../utilities/format";
-import { lintMarkdown } from "../utilities/lint-markdown";
-import { LintErrorTooltip } from "./lint-error-tooltip";
-
-let idCounter = 0;
-
-interface ErrorLineChunk {
-  top: number;
-  left: number;
-  width: number;
-  startIndex: number;
-  endIndex: number;
-  height: number;
-}
+import {getCharacterCoordinates} from "../utilities/character-coordinates";
+import {formatList} from "../utilities/format";
+import {lintMarkdown} from "../utilities/lint-markdown";
+import {LintErrorTooltip} from "./lint-error-tooltip";
+import {LintErrorAnnotation} from "./lint-error-annotation";
 
 export class LintedMarkdownEditor {
   #textarea: HTMLTextAreaElement;
   #annotationsPortal: HTMLElement;
   #statusContainer: HTMLElement;
-  #id: string;
   #resizeObserver: ResizeObserver;
-  #currentTooltipAnnotation: HTMLElement | undefined;
+
   #tooltip: LintErrorTooltip;
+
+  #_tooltipAnnotation: LintErrorAnnotation | null = null;
+  #_annotations: readonly LintErrorAnnotation[] = [];
 
   constructor(
     textarea: HTMLTextAreaElement,
-    rootPortal: HTMLElement,
+    portal: HTMLElement,
     tooltip: LintErrorTooltip
   ) {
     this.#textarea = textarea;
     this.#tooltip = tooltip;
-    this.#id = (++idCounter).toString();
-
-    textarea.dataset.markdownLintingId = this.#id;
 
     this.#annotationsPortal = document.createElement("div");
-    this.#annotationsPortal.dataset.markdownLintingPortalId = this.#id;
-    rootPortal.appendChild(this.#annotationsPortal);
+    portal.appendChild(this.#annotationsPortal);
 
     this.#statusContainer = document.createElement("div");
     this.#statusContainer.setAttribute("aria-live", "polite");
     this.#statusContainer.style.position = "absolute";
     this.#statusContainer.style.clipPath = "circle(0)";
-    rootPortal.appendChild(this.#statusContainer);
+    portal.appendChild(this.#statusContainer);
 
     this.#textarea.addEventListener("input", this.#onRefresh);
     this.#textarea.addEventListener("focus", this.#onRefresh);
@@ -77,181 +65,117 @@ export class LintedMarkdownEditor {
     this.#statusContainer.parentElement?.removeChild(this.#statusContainer);
   }
 
+  getCharacterCoordinates(index: number) {
+    return getCharacterCoordinates(this.#textarea, index);
+  }
+
+  getBoundingClientRect() {
+    return this.#textarea.getBoundingClientRect();
+  }
+
+  get value() {
+    return this.#textarea.value;
+  }
+
+  set #annotations(annotations: ReadonlyArray<LintErrorAnnotation>) {
+    if (annotations === this.#_annotations) return;
+
+    this.#_annotations = annotations;
+
+    this.#statusContainer.textContent =
+      annotations.length > 0
+        ? `${annotations.length} Markdown problem${
+            annotations.length > 1 ? "s" : ""
+          } identified: see line${
+            annotations.length > 1 ? "s" : ""
+          } ${formatList(
+            annotations.map((a) => a.lineNumber.toString()),
+            "and"
+          )}`
+        : "";
+  }
+
+  get #annotations() {
+    return this.#_annotations;
+  }
+
+  set #tooltipAnnotation(annotation: LintErrorAnnotation | null) {
+    if (annotation === this.#_tooltipAnnotation) return;
+
+    this.#_tooltipAnnotation = annotation;
+
+    if (annotation) {
+      const position = annotation.getTooltipPosition();
+      if (position)
+        this.#tooltip.show(
+          annotation.name,
+          annotation.description,
+          annotation.details,
+          position
+        );
+    } else {
+      this.#tooltip.hide();
+    }
+  }
+
   #onRefresh = () => this.#lint();
 
-  #onBlur = () => {
-    this.#clearErrors();
-    this.#hideTooltip();
-  };
+  #onBlur = () => this.#clear();
 
   #onMouseMove = (event: MouseEvent) =>
     this.#updatePointerTooltip(event.clientX, event.clientY);
 
-  #onMouseLeave = () => this.#hideTooltip();
+  #onMouseLeave = () => (this.#tooltipAnnotation = null);
 
   #onSelectionChange = () => {
+    // this event only works when applied to the document but we can filter it by detecting focus
     if (document.activeElement === this.#textarea) this.#updateCaretTooltip();
   };
 
-  #clearErrors() {
+  #clear() {
+    // the annotations will clean themselves up too but this is slightly faster
     this.#annotationsPortal.replaceChildren();
-    this.#statusContainer.replaceChildren();
+
+    for (const annotation of this.#annotations) annotation.disconnect();
+
+    this.#annotations = [];
+    this.#tooltipAnnotation = null;
   }
 
   #lint() {
+    this.#clear();
+
     if (document.activeElement !== this.#textarea) return;
 
-    const markdown = this.#textarea.value;
-    const errors = lintMarkdown(markdown) ?? [];
+    const errors = lintMarkdown(this.value) ?? [];
 
-    this.#annotationsPortal.replaceChildren();
-
-    const lines = markdown.split("\n");
-    for (const error of errors) {
-      const [line, ...prevLines] = lines.slice(0, error.lineNumber).reverse();
-      if (line === undefined) continue;
-
-      const prevLineChars = prevLines.reduce(
-        (t, l) => t + l.length + 1 /* add one for newline char */,
-        0
-      );
-      const lineStart = error.errorRange?.[0] ?? 0;
-      const overallStartIndex =
-        prevLineChars + (error.errorRange?.[0] ?? 1) - 1;
-
-      let overallEndIndex =
-        overallStartIndex +
-        (error.errorRange?.[1] ?? line.length - lineStart + 1);
-
-      // It's not enought to just split by '/n' because we may have soft line wraps to deal with as well.
-      // The only way to figure these out is to calculate coordinates for every character.
-      const errorLineChunks: ErrorLineChunk[] = [];
-      for (let i = overallStartIndex; i <= overallEndIndex; i++) {
-        const lastLine = errorLineChunks.at(-1);
-        const coords = getCharacterCoordinates(this.#textarea, i);
-        if (lastLine && lastLine.top === coords.top) {
-          lastLine.width = coords.left - lastLine.left + coords.width;
-          lastLine.endIndex = i;
-        } else if (i !== overallEndIndex) {
-          /* (don't create any empty chunks from the last char) */ if (
-            lastLine
-          ) {
-            // there's no character after the end of the soft line to get that last bit so we have to guess it
-            lastLine.width +=
-              lastLine.width /
-              markdown.slice(lastLine.startIndex, lastLine.endIndex + 1).length;
-          }
-          errorLineChunks.push({
-            ...coords,
-            width: 0,
-            startIndex: i,
-            endIndex: i,
-          });
-        }
-      }
-
-      const editorRect = this.#textarea.getBoundingClientRect();
-
-      // render an annotation for each line separately
-      for (let {
-        left,
-        width,
-        top,
-        height,
-        startIndex,
-        endIndex,
-      } of errorLineChunks) {
-        // suppress when out of bounds
-        if (
-          top < editorRect.top ||
-          top + height > editorRect.bottom ||
-          left < editorRect.left ||
-          left + width > editorRect.right
-        )
-          continue;
-
-        const annotation = document.createElement("span");
-        annotation.style.position = "absolute";
-        // account for window scroll because they are absolute, not fixed
-        annotation.style.top = `${top + scrollY - 2}px`;
-        annotation.style.left = `${left + scrollX}px`;
-        annotation.style.width = `${width}px`;
-        annotation.style.backgroundColor = "var(--color-danger-emphasis)";
-        annotation.style.opacity = "0.2";
-        annotation.style.height = `${height}px`;
-        annotation.style.pointerEvents = "none";
-
-        annotation.dataset.errorName =
-          error.ruleNames?.slice(0, 2).join(": ") ?? "";
-        annotation.dataset.errorDescription = error.ruleDescription ?? "";
-        annotation.dataset.errorDetails = error.errorDetail ?? "";
-        annotation.dataset.startIndex = startIndex.toString();
-        annotation.dataset.endIndex = endIndex.toString();
-
-        this.#annotationsPortal.appendChild(annotation);
-      }
-    }
-
-    this.#statusContainer.textContent = `${errors.length} Markdown problem${
-      errors.length > 1 ? "s" : ""
-    } identified: see line${errors.length > 1 ? "s" : ""} ${formatList(
-      errors.map((e) => e.lineNumber.toString()),
-      "and"
-    )}`;
-  }
-
-  #hideTooltip() {
-    this.#tooltip.hide();
-    this.#currentTooltipAnnotation = undefined;
-  }
-
-  #showTooltip(forAnnotation: HTMLElement) {
-    if (this.#currentTooltipAnnotation !== forAnnotation) {
-      const rect = forAnnotation.getBoundingClientRect();
-      this.#tooltip.show(
-        forAnnotation.dataset.errorName ?? "",
-        forAnnotation.dataset.errorDescription ?? "",
-        forAnnotation.dataset.errorDetails ?? "",
-        { top: rect.top + rect.height + scrollY, left: rect.left + scrollX }
-      );
-      this.#currentTooltipAnnotation = forAnnotation;
-    }
+    this.#annotations = errors.map(
+      (error) => new LintErrorAnnotation(error, this, this.#annotationsPortal)
+    );
   }
 
   #updatePointerTooltip(pointerX: number, pointerY: number) {
     // can't use mouse events on annotations (the easy way) because they have pointer-events: none
 
-    for (const annotation of this.#annotationsPortal.children) {
-      const rect = annotation.getBoundingClientRect();
-      if (
-        annotation instanceof HTMLElement &&
-        pointerX >= rect.left &&
-        pointerX <= rect.left + rect.width &&
-        pointerY >= rect.top &&
-        pointerY <= rect.top + rect.height
-      ) {
-        this.#showTooltip(annotation);
+    for (const annotation of this.#annotations)
+      if (annotation.containsCoordinates(pointerX, pointerY)) {
+        this.#tooltipAnnotation = annotation;
         return;
       }
-    }
 
-    this.#hideTooltip();
+    this.#tooltipAnnotation = null;
   }
 
   #updateCaretTooltip() {
     if (this.#textarea.selectionEnd !== this.#textarea.selectionStart) return;
     const caretIndex = this.#textarea.selectionStart;
 
-    for (const annotation of this.#annotationsPortal.children)
-      if (
-        annotation instanceof HTMLElement &&
-        parseInt(annotation.dataset.startIndex ?? "-1") <= caretIndex &&
-        parseInt(annotation.dataset.endIndex ?? "-1") >= caretIndex
-      ) {
-        this.#showTooltip(annotation);
+    for (const annotation of this.#annotations)
+      if (annotation.containsIndex(caretIndex)) {
+        this.#tooltipAnnotation = annotation;
         return;
       }
 
-    this.#hideTooltip();
+    this.#tooltipAnnotation = null;
   }
 }
