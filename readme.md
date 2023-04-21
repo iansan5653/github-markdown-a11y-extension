@@ -6,12 +6,18 @@ Markdown Accessibility Checker is a Chrome extension for validating Markdown in 
 
 ### Installation
 
+For now, the extension must be manually installed. In the future it will be published in the Chrome web store.
+
+This has only been tested with Chrome, but theoretically it should work in Firefox as well.
+
 1. Clone or download this repo.
 2. Navigate to chrome://extensions/.
 3. Flip on "Developer Mode" in the upper right-hand corner.
 4. Select "Load unpacked".
 5. Choose this unzipped repo folder.
 6. Navigate to github.com.
+
+Tip: If you use `git clone` to get the repo and you keep that around after you install the extension, you can get the latest updates with a simple `git pull` and click the 'Refresh' button in the chrome://extensions/ page tools.
 
 ### Linting rules
 
@@ -26,4 +32,3 @@ The base set of rules comes from [Markdownlint-github](https://github.com/github
 - `no-empty-links`: Ensures all links have some visible link text
 
 **Important:** Requests for new rules and changes to existing rules should be made in either the Markdownlint or Markdownlint-github repositories.
-
