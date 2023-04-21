@@ -40,6 +40,12 @@ export class LintErrorTooltip {
    * @param {{top: number, left: number}} position
    */
   show(nameText, descriptionText, detailsText, {top, left}) {
+    // so screen readers know what the live update means
+    const accessiblePrefix = document.createElement('span')
+    accessiblePrefix.textContent = "Markdown problem: "
+    accessiblePrefix.style.clipPath = 'circle(0)'
+    accessiblePrefix.style.position = 'absolute'
+
     const description = document.createElement("div");
     description.textContent = descriptionText;
     description.style.fontWeight = "bold";
@@ -53,7 +59,7 @@ export class LintErrorTooltip {
     name.style.fontSize = "12px";
     name.style.color = "var(--color-fg-muted)";
 
-    this.#tooltip.replaceChildren(description, details, name);
+    this.#tooltip.replaceChildren(accessiblePrefix, description, details, name);
 
     this.#tooltip.style.top = `${top}px`;
     this.#tooltip.style.left = `${left}px`;
