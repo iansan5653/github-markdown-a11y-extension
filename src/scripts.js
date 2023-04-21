@@ -6,6 +6,10 @@ import markdownlint from "markdownlint";
 import markdownlintGitHub from "@github/markdownlint-github";
 import {getCharacterCoordinates} from "./character-coordinates";
 import {observeSelector} from "./observe";
+import {LintErrorTooltip} from "./tooltip";
+
+const rootPortal = document.createElement('div')
+document.body.appendChild(rootPortal)
 
 /** @param {string} markdown */
 const lintString = (markdown) => 
@@ -29,14 +33,14 @@ const lintEditor = (editor, portal) => {
   portal.replaceChildren()
 
   const lines = markdown.split('\n')
-  for (const {lineNumber, errorRange} of errors) {
-    const [line, ...prevLines] = lines.slice(0, lineNumber).reverse()
+  for (const error of errors) {
+    const [line, ...prevLines] = lines.slice(0, error.lineNumber).reverse()
     const prevLineChars = prevLines.reduce((t, l) => t + l.length + 1 /* add one for newline char */, 0)
-    const lineStart = errorRange?.[0] ?? 0
-    const startIndex = prevLineChars + (errorRange?.[0] ?? 1) - 1
+    const lineStart = error.errorRange?.[0] ?? 0
+    const startIndex = prevLineChars + (error.errorRange?.[0] ?? 1) - 1
     const startCoords = getCharacterCoordinates(editor, startIndex)
     
-    let endIndex = startIndex + (errorRange?.[1] ?? (line.length - lineStart + 1)) - 1
+    let endIndex = startIndex + (error.errorRange?.[1] ?? (line.length - lineStart + 1)) - 1
     let endCoords = getCharacterCoordinates(editor, endIndex)
     while (endCoords.height > startCoords.height) {
       endCoords = getCharacterCoordinates(editor, --endIndex)
@@ -51,6 +55,11 @@ const lintEditor = (editor, portal) => {
     annotation.style.opacity = '0.2'
     annotation.style.height = `${startCoords.height}px`
     annotation.style.pointerEvents = 'none'
+
+    annotation.dataset.isMarkdownLintError = 'true'
+    annotation.dataset.errorTitle = error.ruleDescription
+    annotation.dataset.errorBody = error.errorDetail
+
     portal.appendChild(annotation)
   }
 }
@@ -63,7 +72,7 @@ observeSelector(markdownEditorsSelector, editor => {
   if (editorRect.height < 5 || editorRect.width < 5) return () => {}
 
   const portal = document.createElement('div')
-  document.body.appendChild(portal)
+  rootPortal.appendChild(portal)
 
   const refreshLint = () => lintEditor(/** @type {HTMLTextAreaElement} */(editor), portal)
   
@@ -76,8 +85,33 @@ observeSelector(markdownEditorsSelector, editor => {
 
   return () => {
     document.removeEventListener('input', refreshLint)
-    document.body.removeChild(portal)
+    rootPortal.removeChild(portal)
     resizeObserver.disconnect()
   }
+})
+
+const tooltip = new LintErrorTooltip()
+let currentTooltipAnnotation = null
+
+document.addEventListener('mousemove', event => {
+  // can't use mouse events on annotations (the easy way) because they have pointer-events: none
+
+  const x = event.clientX
+  const y = event.clientY
+
+  for (const editorPortal of rootPortal.children)
+    for (const annotation of editorPortal.children) {
+      const rect = annotation.getBoundingClientRect()
+      if (x >= rect.left && x <= rect.left + rect.width && y >= rect.top && y <= rect.top + rect.height) {
+        if (currentTooltipAnnotation !== annotation) {
+          tooltip.show(annotation.dataset.errorTitle, annotation.dataset.errorBody, {top: rect.top + rect.height, left: rect.left})
+          currentTooltipAnnotation = annotation
+        }
+        return
+      }
+    }
+
+  tooltip.hide()
+  currentTooltipAnnotation = null
 })
 
