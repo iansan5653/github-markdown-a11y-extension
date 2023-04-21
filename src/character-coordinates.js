@@ -146,7 +146,7 @@ export function getCharacterCoordinates(element, index) {
   // The  *only* reliable way to do that is to copy the *entire* rest of the
   // textarea's content into the <span> created at the caret position.
   // For inputs, '.' is enough because there is no wrapping.
-  span.textContent = isInput ? "." : element.value.substring(index) || "."; // because a completely empty faux span doesn't render at all
+  span.textContent = element.value.substring(index) || "."; // because a completely empty faux span doesn't render at all
   div.appendChild(span);
 
   const {top: viewportOffsetTop, left: viewportOffsetLeft} =
@@ -163,6 +163,7 @@ export function getCharacterCoordinates(element, index) {
       parseInt(computed.borderLeftWidth) -
       element.scrollLeft +
       viewportOffsetLeft,
+    width: span.clientWidth,
     height: lineHeight,
   };
 

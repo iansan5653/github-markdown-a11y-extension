@@ -39,32 +39,53 @@ const lintEditor = (editor, portal) => {
     const [line, ...prevLines] = lines.slice(0, error.lineNumber).reverse()
     const prevLineChars = prevLines.reduce((t, l) => t + l.length + 1 /* add one for newline char */, 0)
     const lineStart = error.errorRange?.[0] ?? 0
-    const startIndex = prevLineChars + (error.errorRange?.[0] ?? 1) - 1
-    const startCoords = getCharacterCoordinates(editor, startIndex)
+    const overallStartIndex = prevLineChars + (error.errorRange?.[0] ?? 1) - 1
     
-    let endIndex = startIndex + (error.errorRange?.[1] ?? (line.length - lineStart + 1)) - 1
-    let endCoords = getCharacterCoordinates(editor, endIndex)
-    while (endCoords.height > startCoords.height) {
-      endCoords = getCharacterCoordinates(editor, --endIndex)
+    let overallEndIndex = overallStartIndex + (error.errorRange?.[1] ?? (line.length - lineStart + 1))
+
+    // It's not enought to just split by '/n' because we may have soft line wraps to deal with as well.
+    // The only way to figure these out is to calculate coordinates for every character.
+    const errorLineChunks = []
+    for (let i = overallStartIndex; i <= overallEndIndex; i++) {
+      const lastLine = errorLineChunks.at(-1)
+      const coords = getCharacterCoordinates(editor, i)
+      if (lastLine && lastLine.top === coords.top) {
+        lastLine.width = coords.left - lastLine.left + coords.width
+        lastLine.endIndex = i
+      } else if (i !== overallEndIndex) /* (don't create any empty chunks from the last char) */ {
+        if (lastLine) {
+          // there's no character after the end of the soft line to get that last bit so we have to guess it
+          lastLine.width += lastLine.width / markdown.slice(lastLine.startIndex, lastLine.endIndex + 1).length
+        }
+        errorLineChunks.push({
+          ...coords,
+          width: 0,
+          startIndex: i,
+          endIndex: i
+        })
+      }
     }
 
-    const annotation = document.createElement('span')
-    annotation.style.position = 'absolute'
-    annotation.style.top = `${startCoords.top - 2}px`
-    annotation.style.left = `${startCoords.left}px`
-    annotation.style.width = `${endCoords.left - startCoords.left}px`
-    annotation.style.backgroundColor = 'var(--color-danger-emphasis)'
-    annotation.style.opacity = '0.2'
-    annotation.style.height = `${startCoords.height}px`
-    annotation.style.pointerEvents = 'none'
+    // render an annotation for each line separately
+    for (let {left, width, top, height, startIndex, endIndex} of errorLineChunks) {
+      const annotation = document.createElement('span')
+      annotation.style.position = 'absolute'
+      annotation.style.top = `${top - 2}px`
+      annotation.style.left = `${left}px`
+      annotation.style.width = `${width}px`
+      annotation.style.backgroundColor = 'var(--color-danger-emphasis)'
+      annotation.style.opacity = '0.2'
+      annotation.style.height = `${height}px`
+      annotation.style.pointerEvents = 'none'
 
-    annotation.dataset.errorName = error.ruleNames?.join(': ') ?? "";
-    annotation.dataset.errorDescription = error.ruleDescription ?? "";
-    annotation.dataset.errorDetails = error.errorDetail ?? "";
-    annotation.dataset.startIndex = startIndex.toString()
-    annotation.dataset.endIndex = endIndex.toString()
+      annotation.dataset.errorName = error.ruleNames?.slice(0, 2).join(': ') ?? "";
+      annotation.dataset.errorDescription = error.ruleDescription ?? "";
+      annotation.dataset.errorDetails = error.errorDetail ?? "";
+      annotation.dataset.startIndex = startIndex.toString()
+      annotation.dataset.endIndex = endIndex.toString()
 
-    portal.appendChild(annotation)
+      portal.appendChild(annotation)
+    }
   }
 }
 
