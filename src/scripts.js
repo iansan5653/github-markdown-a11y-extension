@@ -17,7 +17,7 @@ const lintString = (markdown) =>
     strings: {
       content: markdown,
     },
-    config: markdownlintGitHub.init({default: false}),
+    config: markdownlintGitHub.init({default: false, 'heading-increment': true, 'no-reversed-links': true, 'no-empty-links': true}),
     handleRuleFailures: true,
     customRules: markdownlintGitHub,
   }).content
@@ -29,6 +29,8 @@ const lintString = (markdown) =>
 const lintEditor = (editor, portal) => {
   const markdown = editor.value
   const errors = lintString(markdown)
+
+  console.log(errors)
 
   portal.replaceChildren()
 
@@ -56,8 +58,9 @@ const lintEditor = (editor, portal) => {
     annotation.style.height = `${startCoords.height}px`
     annotation.style.pointerEvents = 'none'
 
-    annotation.dataset.errorTitle = error.ruleDescription
-    annotation.dataset.errorBody = error.errorDetail
+    annotation.dataset.errorName = error.ruleNames?.join(': ') ?? "";
+    annotation.dataset.errorDescription = error.ruleDescription ?? "";
+    annotation.dataset.errorDetails = error.errorDetail ?? "";
     annotation.dataset.startIndex = startIndex.toString()
     annotation.dataset.endIndex = endIndex.toString()
 
@@ -114,7 +117,7 @@ document.addEventListener('mousemove', event => {
       const rect = annotation.getBoundingClientRect()
       if (x >= rect.left && x <= rect.left + rect.width && y >= rect.top && y <= rect.top + rect.height) {
         if (currentTooltipAnnotation !== annotation) {
-          tooltip.show(annotation.dataset.errorTitle, annotation.dataset.errorBody, {top: rect.top + rect.height, left: rect.left})
+          tooltip.show(annotation.dataset.errorName, annotation.dataset.errorDescription, annotation.dataset.errorDetails, {top: rect.top + rect.height, left: rect.left})
           currentTooltipAnnotation = annotation
         }
         return
@@ -137,7 +140,7 @@ document.addEventListener('selectionchange', () => {
     for (const annotation of portal.children)
       if (parseInt(annotation.dataset.startIndex) <= caretIndex && parseInt(annotation.dataset.endIndex) >= caretIndex) {
         const rect = annotation.getBoundingClientRect()
-        tooltip.show(annotation.dataset.errorTitle, annotation.dataset.errorBody, {top: rect.top + rect.height, left: rect.left})
+        tooltip.show(annotation.dataset.errorName, annotation.dataset.errorDescription, annotation.dataset.errorDetails, {top: rect.top + rect.height, left: rect.left})
         currentTooltipAnnotation = annotation
         return
       }

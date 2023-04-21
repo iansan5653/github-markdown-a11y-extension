@@ -34,11 +34,17 @@ export class LintErrorTooltip {
   }
 
   /**
+   * @param {string} nameText
    * @param {string} titleText
    * @param {string} bodyText
    * @param {{top: number, left: number}} position
    */
-  show(titleText, bodyText, {top, left}) {
+  show(nameText, titleText, bodyText, {top, left}) {
+    const name = document.createElement("div");
+    name.textContent = nameText;
+    name.style.fontSize = "12px";
+    name.style.color = "var(--color-fg-muted)";
+
     const title = document.createElement("div");
     title.textContent = titleText;
     title.style.fontWeight = "bold";
@@ -47,7 +53,7 @@ export class LintErrorTooltip {
     const body = document.createElement("div");
     body.textContent = bodyText;
 
-    this.#tooltip.replaceChildren(title, body);
+    this.#tooltip.replaceChildren(name, title, body);
 
     this.#tooltip.style.top = `${top}px`;
     this.#tooltip.style.left = `${left}px`;
