@@ -4,7 +4,7 @@
 
 import {LintErrorTooltip} from "./components/lint-error-tooltip";
 import {LintedMarkdownEditor} from "./components/linted-markdown-editor";
-import {observeSelector} from "./observe";
+import {observeSelector} from "./utilities/observe";
 
 const rootPortal = document.createElement("div");
 document.body.appendChild(rootPortal);

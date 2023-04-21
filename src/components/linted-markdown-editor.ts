@@ -2,9 +2,9 @@
 
 "use strict";
 
-import {getCharacterCoordinates} from "../character-coordinates";
-import {formatList} from "../format";
-import {lintMarkdown} from "../lint-markdown";
+import {getCharacterCoordinates} from "../utilities/character-coordinates";
+import {formatList} from "../utilities/format";
+import {lintMarkdown} from "../utilities/lint-markdown";
 import {LintErrorTooltip} from "./lint-error-tooltip";
 
 let idCounter = 0;

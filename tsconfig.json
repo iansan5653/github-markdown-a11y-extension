@@ -17,6 +17,6 @@
     }
   },
   "files": [
-    "src/scripts.ts"
+    "src/content-script.ts"
   ]
 }

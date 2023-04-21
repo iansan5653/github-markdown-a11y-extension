@@ -5,7 +5,7 @@
   "content_scripts": [
     {
       "matches": ["https://*.github.com/*"],
-      "js": ["dist/scripts.min.js"]
+      "js": ["dist/content-script.min.js"]
     }
   ]
 }

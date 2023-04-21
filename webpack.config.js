@@ -10,7 +10,7 @@ const nodeModulePrefixRe = /^node:/u;
 
 module.exports = [
   {
-    entry: "./src/scripts.ts",
+    entry: "./src/content-script.ts",
     devtool: false,
     externals: {},
     module: {
@@ -29,7 +29,7 @@ module.exports = [
     },
     name,
     output: {
-      filename: "dist/scripts.min.js",
+      filename: "dist/content-script.min.js",
       library: {
         name: name.replace(/(-\w)/g, (m) => m.slice(1).toUpperCase()),
         type: "var",
