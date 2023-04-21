@@ -9,21 +9,29 @@ import {LintErrorTooltip} from "./lint-error-tooltip";
 
 let idCounter = 0;
 
-export class LintedMarkdownEditor {
-  #textarea;
-  #annotationsPortal;
-  #statusContainer;
-  #id;
-  #resizeObserver;
-  #currentTooltipAnnotation;
-  #tooltip;
+interface ErrorLineChunk {
+  top: number;
+  left: number;
+  width: number;
+  startIndex: number;
+  endIndex: number;
+  height: number;
+}
 
-  /**
-   * @param {HTMLTextAreaElement} textarea
-   * @param {HTMLElement} rootPortal
-   * @param {LintErrorTooltip} tooltip
-   */
-  constructor(textarea, rootPortal, tooltip) {
+export class LintedMarkdownEditor {
+  #textarea: HTMLTextAreaElement;
+  #annotationsPortal: HTMLElement;
+  #statusContainer: HTMLElement;
+  #id: string;
+  #resizeObserver: ResizeObserver;
+  #currentTooltipAnnotation: HTMLElement | undefined;
+  #tooltip: LintErrorTooltip;
+
+  constructor(
+    textarea: HTMLTextAreaElement,
+    rootPortal: HTMLElement,
+    tooltip: LintErrorTooltip
+  ) {
     this.#textarea = textarea;
     this.#tooltip = tooltip;
     this.#id = (++idCounter).toString();
@@ -76,8 +84,7 @@ export class LintedMarkdownEditor {
     this.#hideTooltip();
   };
 
-  /** @param {MouseEvent} event */
-  #onMouseMove = (event) =>
+  #onMouseMove = (event: MouseEvent) =>
     this.#updatePointerTooltip(event.clientX, event.clientY);
   #onMouseLeave = () => this.#hideTooltip();
 
@@ -94,13 +101,15 @@ export class LintedMarkdownEditor {
     if (document.activeElement !== this.#textarea) return;
 
     const markdown = this.#textarea.value;
-    const errors = lintMarkdown(markdown);
+    const errors = lintMarkdown(markdown) ?? [];
 
     this.#annotationsPortal.replaceChildren();
 
     const lines = markdown.split("\n");
     for (const error of errors) {
       const [line, ...prevLines] = lines.slice(0, error.lineNumber).reverse();
+      if (line === undefined) continue;
+
       const prevLineChars = prevLines.reduce(
         (t, l) => t + l.length + 1 /* add one for newline char */,
         0
@@ -115,7 +124,7 @@ export class LintedMarkdownEditor {
 
       // It's not enought to just split by '/n' because we may have soft line wraps to deal with as well.
       // The only way to figure these out is to calculate coordinates for every character.
-      const errorLineChunks = [];
+      const errorLineChunks: ErrorLineChunk[] = [];
       for (let i = overallStartIndex; i <= overallEndIndex; i++) {
         const lastLine = errorLineChunks.at(-1);
         const coords = getCharacterCoordinates(this.#textarea, i);
@@ -195,8 +204,7 @@ export class LintedMarkdownEditor {
     this.#currentTooltipAnnotation = undefined;
   }
 
-  /** @param {HTMLElement} forAnnotation */
-  #showTooltip(forAnnotation) {
+  #showTooltip(forAnnotation: HTMLElement) {
     if (this.#currentTooltipAnnotation !== forAnnotation) {
       const rect = forAnnotation.getBoundingClientRect();
       this.#tooltip.show(
@@ -209,11 +217,7 @@ export class LintedMarkdownEditor {
     }
   }
 
-  /**
-   * @param {number} pointerX
-   * @param {number} pointerY
-   */
-  #updatePointerTooltip(pointerX, pointerY) {
+  #updatePointerTooltip(pointerX: number, pointerY: number) {
     // can't use mouse events on annotations (the easy way) because they have pointer-events: none
 
     for (const annotation of this.#annotationsPortal.children) {

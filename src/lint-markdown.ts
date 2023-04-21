@@ -1,8 +1,7 @@
-import markdownlint from "markdownlint";
+import markdownlint, {LintError} from "markdownlint";
 import markdownlintGitHub from "@github/markdownlint-github";
 
-/** @param {string} markdown */
-export const lintMarkdown = (markdown) =>
+export const lintMarkdown = (markdown: string): LintError[] | undefined =>
   markdownlint.sync({
     strings: {
       content: markdown,

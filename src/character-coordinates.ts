@@ -39,8 +39,8 @@ const propertiesToCopy = [
   "wordSpacing",
 
   "tabSize",
-  "MozTabSize", // prefixed version for Firefox <= 52
-];
+  "MozTabSize" as "tabSize", // prefixed version for Firefox <= 52
+] as const satisfies ReadonlyArray<keyof CSSStyleDeclaration>;
 
 /**
  * Obtain the coordinates (px) of the top left of a character in an input, relative to
@@ -50,10 +50,13 @@ const propertiesToCopy = [
  * which was forked from https://github.com/koddsson/textarea-caret-position, which was
  * forked from https://github.com/component/textarea-caret-position.
  *
- * @param {HTMLTextAreaElement | HTMLInputElement} element The target input element.
- * @param {number} index The index of the character to calculate.
+ * @param element The target input element.
+ * @param index The index of the character to calculate.
  */
-export function getCharacterCoordinates(element, index) {
+export function getCharacterCoordinates(
+  element: HTMLTextAreaElement | HTMLInputElement,
+  index: number
+) {
   const isFirefox = "mozInnerScreenX" in window;
 
   // The mirror div will replicate the textarea's style
@@ -148,7 +151,7 @@ export function getCharacterCoordinates(element, index) {
   span.textContent = element.value.substring(index) || "."; // because a completely empty faux span doesn't render at all
   div.appendChild(span);
 
-  const { top: viewportOffsetTop, left: viewportOffsetLeft } =
+  const {top: viewportOffsetTop, left: viewportOffsetLeft} =
     element.getBoundingClientRect();
 
   const coordinates = {

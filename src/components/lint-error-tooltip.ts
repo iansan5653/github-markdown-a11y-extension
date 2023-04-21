@@ -8,7 +8,7 @@ export class LintErrorTooltip {
     this.#tooltip = document.createElement("div");
 
     this.#tooltip.setAttribute("aria-live", "polite");
-    this.hide()
+    this.hide();
 
     this.#tooltip.style.backgroundColor = "var(--color-canvas-default)";
     this.#tooltip.style.padding = "8px";
@@ -24,13 +24,12 @@ export class LintErrorTooltip {
     document.body.appendChild(this.#tooltip);
   }
 
-  /**
-   * @param {string} nameText
-   * @param {string} descriptionText
-   * @param {string} detailsText
-   * @param {{top: number, left: number}} position
-   */
-  show(nameText, descriptionText, detailsText, { top, left }) {
+  show(
+    nameText: string,
+    descriptionText: string,
+    detailsText: string,
+    {top, left}: {top: number; left: number}
+  ) {
     // so screen readers know what the live update means
     const accessiblePrefix = document.createElement("span");
     accessiblePrefix.textContent = "Markdown problem: ";
@@ -64,8 +63,7 @@ export class LintErrorTooltip {
     this.#tooltip.setAttribute("hidden", "true");
   }
 
-  /** @param {KeyboardEvent} event */
-  #onGlobalKeydown(event) {
+  #onGlobalKeydown(event: KeyboardEvent) {
     if (event.key === "Escape" && !event.defaultPrevented) this.hide();
   }
 }

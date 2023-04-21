@@ -8,6 +8,7 @@ import {observeSelector} from "./observe";
 
 const rootPortal = document.createElement("div");
 document.body.appendChild(rootPortal);
+
 const tooltip = new LintErrorTooltip();
 
 const markdownEditorsSelector =

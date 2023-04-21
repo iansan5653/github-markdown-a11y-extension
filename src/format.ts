@@ -1,8 +1,4 @@
-/**
- * @param {string[]} items
- * @param {string} conjunction
- */
-export const formatList = (items, conjunction) => {
+export const formatList = (items: string[], conjunction: string) => {
   if (items.length > 2) {
     items.push(`${conjunction} ${items.pop()}`);
     return items.join(", ");
