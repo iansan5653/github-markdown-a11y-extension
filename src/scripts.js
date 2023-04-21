@@ -129,13 +129,13 @@ const lintEditor = (
   } Markdown problem${errors.length > 1 ? "s" : ""} identified: see line${
     errors.length > 1 ? "s" : ""
   } ${formatList(
-    errors.map((e) => e.lineNumber),
+    errors.map((e) => e.lineNumber.toString()),
     "and"
   )}`;
 };
 
 const markdownEditorsSelector =
-  "textarea.js-paste-markdown, textarea.CommentBox-input";
+  "textarea.js-paste-markdown, textarea.CommentBox-input, textarea[aria-label='Markdown value']";
 let idCounter = 1;
 
 observeSelector(markdownEditorsSelector, (editor) => {
