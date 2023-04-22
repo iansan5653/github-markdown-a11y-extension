@@ -2,7 +2,7 @@
 
 "use strict";
 
-import {getCharacterCoordinates} from "../utilities/character-coordinates";
+import {CharacterCoordinatesCalculator} from "../utilities/character-coordinates";
 import {formatList} from "../utilities/format";
 import {lintMarkdown} from "../utilities/lint-markdown";
 import {LintErrorTooltip} from "./lint-error-tooltip";
@@ -13,6 +13,7 @@ export class LintedMarkdownEditor {
   #annotationsPortal: HTMLElement;
   #statusContainer: HTMLElement;
   #resizeObserver: ResizeObserver;
+  #characterCoordinatesCalculator: CharacterCoordinatesCalculator;
 
   #tooltip: LintErrorTooltip;
 
@@ -47,6 +48,10 @@ export class LintedMarkdownEditor {
 
     this.#resizeObserver = new ResizeObserver(this.#onRefresh);
     this.#resizeObserver.observe(textarea);
+
+    this.#characterCoordinatesCalculator = new CharacterCoordinatesCalculator(
+      textarea
+    );
   }
 
   disconnect() {
@@ -60,13 +65,14 @@ export class LintedMarkdownEditor {
     document.removeEventListener("selectionchange", this.#onSelectionChange);
 
     this.#resizeObserver.disconnect();
+    this.#characterCoordinatesCalculator.disconnect();
 
     this.#annotationsPortal.parentElement?.removeChild(this.#annotationsPortal);
     this.#statusContainer.parentElement?.removeChild(this.#statusContainer);
   }
 
   getCharacterCoordinates(index: number) {
-    return getCharacterCoordinates(this.#textarea, index);
+    return this.#characterCoordinatesCalculator.getCoordinates(index);
   }
 
   getBoundingClientRect() {
