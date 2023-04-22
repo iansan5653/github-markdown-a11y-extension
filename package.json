@@ -4,6 +4,7 @@
   "description": "Lint contents of GitHub Markdown inputs for accessibility issues.",
   "scripts": {
     "build": "webpack",
+    "build:watch": "webpack --watch",
     "format": "prettier --write src/*",
     "check:formatting": "prettier --check src/*",
     "check:types": "tsc --noEmit",
@@ -21,7 +22,6 @@
     "@babel/preset-typescript": "^7.21.4",
     "babel-loader": "^9.1.2",
     "prettier": "^2.8.7",
-    "terser-webpack-plugin": "^5.3.7",
     "ts-loader": "^9.4.2",
     "typescript": "^5.0.4",
     "webpack": "^5.80.0",

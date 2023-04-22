@@ -42,6 +42,12 @@ const propertiesToCopy = [
   "MozTabSize" as "tabSize", // prefixed version for Firefox <= 52
 ] as const satisfies ReadonlyArray<keyof CSSStyleDeclaration>;
 
+export interface Coordinates {
+  top: number;
+  left: number;
+  height: number;
+}
+
 /**
  * Obtain the coordinates (px) of the top left of a character in an input, relative to
  * the viewport.
@@ -56,7 +62,7 @@ const propertiesToCopy = [
 export function getCharacterCoordinates(
   element: HTMLTextAreaElement | HTMLInputElement,
   index: number
-) {
+): Coordinates {
   const isFirefox = "mozInnerScreenX" in window;
 
   // The mirror div will replicate the textarea's style
@@ -151,7 +157,7 @@ export function getCharacterCoordinates(
   span.textContent = element.value.substring(index) || "."; // because a completely empty faux span doesn't render at all
   div.appendChild(span);
 
-  const { top: viewportOffsetTop, left: viewportOffsetLeft } =
+  const {top: viewportOffsetTop, left: viewportOffsetLeft} =
     element.getBoundingClientRect();
 
   const coordinates = {
@@ -165,7 +171,6 @@ export function getCharacterCoordinates(
       parseInt(computed.borderLeftWidth) -
       element.scrollLeft +
       viewportOffsetLeft,
-    width: span.clientWidth,
     height: lineHeight,
   };
 

@@ -1,5 +1,6 @@
 import {LintError} from "markdownlint";
 import {LintedMarkdownEditor} from "./linted-markdown-editor";
+import {Coordinates} from "../utilities/character-coordinates";
 
 interface ErrorLineChunk {
   top: number;
@@ -36,51 +37,75 @@ export class LintErrorAnnotation {
     portal.appendChild(this.#portal);
 
     const markdown = editor.value;
-    const lines = markdown.split("\n");
+    const [line = "", ...prevLines] = markdown
+      .split("\n")
+      .slice(0, this.lineNumber)
+      .reverse();
 
-    const [line, ...prevLines] = lines.slice(0, this.lineNumber).reverse();
-    if (line === undefined) throw new Error("Invalid lineNumber");
+    const startCol = (error.errorRange?.[0] ?? 1) - 1;
+    const length = error.errorRange?.[1] ?? line.length - startCol;
 
-    const prevLineChars = prevLines.reduce(
-      (t, l) => t + l.length + 1 /* add one for newline char */,
-      0
+    this.#startIndex = prevLines.reduce(
+      (t, l) => t + l.length + 1 /* +1 for newline char */,
+      startCol
     );
-    const lineStart = error.errorRange?.[0] ?? 0;
-
-    this.#startIndex = prevLineChars + (error.errorRange?.[0] ?? 1) - 1;
-    this.#endIndex =
-      this.#startIndex + (error.errorRange?.[1] ?? line.length - lineStart + 1);
+    this.#endIndex = this.#startIndex + length;
 
     // It's not enought to just split by '/n' because we may have soft line wraps to deal with as well.
-    // The only way to figure these out is to calculate coordinates for every character.
-    const errorLineChunks: ErrorLineChunk[] = [];
-    for (let i = this.#startIndex; i <= this.#endIndex; i++) {
-      const lastLine = errorLineChunks.at(-1);
-      const coords = editor.getCharacterCoordinates(i);
-      if (lastLine && lastLine.top === coords.top) {
-        lastLine.width = coords.left - lastLine.left + coords.width;
-        lastLine.endIndex = i;
-      } else if (i !== this.#endIndex) {
-        /* (don't create any empty chunks from the last char) */ if (lastLine) {
-          // there's no character after the end of the soft line to get that last bit so we have to guess it
-          lastLine.width +=
-            lastLine.width /
-            markdown.slice(lastLine.startIndex, lastLine.endIndex + 1).length;
+    // Calculating coordinates for every character is too expensive, so we do a binary search to chunk
+    // the error by soft lines, using a Map to cache already-calculated coordinates.
+    const lineChunks: ErrorLineChunk[] = [];
+    const coordsCache = new Map<number, Coordinates>();
+    const calculateChunks = (startIndex: number, endIndex: number) => {
+      if (endIndex === startIndex) return; // noop - 0 chars
+
+      const firstCoords =
+        coordsCache.get(startIndex) ??
+        editor.getCharacterCoordinates(startIndex);
+      coordsCache.set(startIndex, firstCoords);
+
+      const lastCoords =
+        coordsCache.get(endIndex) ?? editor.getCharacterCoordinates(endIndex);
+      coordsCache.set(endIndex, lastCoords);
+
+      // If in same line, append to previous chunk or create new. Otherwise, split in half and try again
+      if (firstCoords.top === lastCoords.top) {
+        const width = Math.abs(lastCoords.left - firstCoords.left);
+        const last = lineChunks.at(-1);
+        if (last && last.top === firstCoords.top) {
+          last.width += width;
+          last.endIndex = endIndex;
+        } else {
+          lineChunks.push({
+            ...firstCoords,
+            width,
+            startIndex,
+            endIndex,
+          });
         }
-        errorLineChunks.push({
-          ...coords,
-          width: 0,
-          startIndex: i,
-          endIndex: i,
-        });
+      } else if (endIndex === startIndex + 1) {
+        // Means that the startIndex is a char at the end of a soft break. There's no char after this
+        // in the line from which to calculate 1 char width. So we just guess how wide this char is by
+        // getting the average char width in this chunk
+        const last = lineChunks.at(-1);
+        if (last) {
+          last.width += last.width / (last.endIndex - last.startIndex);
+          last.endIndex = endIndex;
+        }
+      } else if (startIndex !== endIndex) {
+        const midIndex = Math.floor((startIndex + endIndex) / 2);
+        calculateChunks(startIndex, midIndex);
+        calculateChunks(midIndex, endIndex);
       }
-    }
+    };
+    calculateChunks(this.#startIndex, this.#endIndex);
 
     const editorRect = editor.getBoundingClientRect();
 
+    // Build the highlight elements, one per chunk
     const elements: HTMLElement[] = [];
     // render an annotation element for each line separately
-    for (const {left, width, top, height} of errorLineChunks) {
+    for (const {left, width, top, height} of lineChunks) {
       // suppress when out of bounds
       if (
         top < editorRect.top ||
@@ -130,6 +155,6 @@ export class LintErrorAnnotation {
   }
 
   containsIndex(index: number) {
-    return index >= this.#startIndex && index <= this.#endIndex;
+    return index >= this.#startIndex && index < this.#endIndex;
   }
 }

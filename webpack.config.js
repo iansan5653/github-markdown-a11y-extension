@@ -3,7 +3,6 @@
 "use strict";
 
 const webpack = require("webpack");
-const TerserPlugin = require("terser-webpack-plugin");
 const {name} = require("./package.json");
 
 const nodeModulePrefixRe = /^node:/u;
@@ -29,7 +28,7 @@ module.exports = [
     },
     name,
     output: {
-      filename: "dist/content-script.min.js",
+      filename: "dist/content-script.js",
       library: {
         name: name.replace(/(-\w)/g, (m) => m.slice(1).toUpperCase()),
         type: "var",
@@ -54,18 +53,6 @@ module.exports = [
       },
       extensions: [".tsx", ".ts", ".js"],
     },
-    mode: "production",
-    optimization: {
-      minimizer: [
-        new TerserPlugin({
-          extractComments: false,
-          terserOptions: {
-            compress: {
-              passes: 2,
-            },
-          },
-        }),
-      ],
-    },
+    mode: "development",
   },
 ];
