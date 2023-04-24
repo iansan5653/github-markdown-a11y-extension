@@ -8,6 +8,7 @@ import {lintMarkdown} from "../utilities/lint-markdown";
 import {LintErrorTooltip} from "./lint-error-tooltip";
 import {LintErrorAnnotation} from "./lint-error-annotation";
 import {Vector} from "../utilities/vector";
+import {NumberRange} from "../utilities/number-range";
 
 export class LintedMarkdownEditor {
   #textarea: HTMLTextAreaElement;
@@ -74,8 +75,10 @@ export class LintedMarkdownEditor {
    * Return a list of rects for the given range. If the range extends over multiple lines,
    * multiple rects will be returned.
    */
-  getRangeRects(start: number, end: number) {
-    return this.#characterCoordinatesCalculator.getClientRects(start, end);
+  getRangeRects(characterIndexes: NumberRange) {
+    return this.#characterCoordinatesCalculator.getClientRects(
+      characterIndexes
+    );
   }
 
   getBoundingClientRect() {

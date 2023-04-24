@@ -204,14 +204,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "LintErrorAnnotation": () => (/* binding */ LintErrorAnnotation)
 /* harmony export */ });
 /* harmony import */ var _utilities_rect__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utilities/rect */ "./src/utilities/rect.ts");
-/* harmony import */ var _utilities_vector__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utilities/vector */ "./src/utilities/vector.ts");
+/* harmony import */ var _utilities_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utilities/dom */ "./src/utilities/dom.ts");
+/* harmony import */ var _utilities_number_range__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utilities/number-range */ "./src/utilities/number-range.ts");
+
 
 
 class LintErrorAnnotation {
   #portal;
   #elements = [];
-  #startIndex;
-  #endIndex;
+  #indexRange;
   constructor(error, editor, portal) {
     this.name = error.ruleNames?.slice(0, 2).join(": ") ?? "";
     this.description = error.ruleDescription ?? "";
@@ -223,16 +224,17 @@ class LintErrorAnnotation {
     const [line = "", ...prevLines] = markdown.split("\n").slice(0, this.lineNumber).reverse();
     const startCol = (error.errorRange?.[0] ?? 1) - 1;
     const length = error.errorRange?.[1] ?? line.length - startCol;
-    this.#startIndex = prevLines.reduce((t, l) => t + l.length + 1 /* +1 for newline char */, startCol);
-    this.#endIndex = this.#startIndex + length;
+    const startIndex = prevLines.reduce((t, l) => t + l.length + 1 /* +1 for newline char */, startCol);
+    const endIndex = startIndex + length;
+    this.#indexRange = new _utilities_number_range__WEBPACK_IMPORTED_MODULE_2__.NumberRange(startIndex, endIndex);
     const editorRect = new _utilities_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(editor.getBoundingClientRect());
-    const scrollVector = new _utilities_vector__WEBPACK_IMPORTED_MODULE_1__.Vector(window.scrollX, window.scrollY);
+    const scrollVector = (0,_utilities_dom__WEBPACK_IMPORTED_MODULE_1__.getWindowScrollVector)();
 
     // The range rectangles are tight around the characters; we'd rather fill the line height if possible
     const lineHeight = editor.getLineHeight();
     const elements = [];
     // render an annotation element for each line separately
-    for (const rect of editor.getRangeRects(this.#startIndex, this.#endIndex)) {
+    for (const rect of editor.getRangeRects(this.#indexRange)) {
       // suppress when out of bounds
       if (!rect.isContainedBy(editorRect)) continue;
 
@@ -258,17 +260,14 @@ class LintErrorAnnotation {
     this.#portal.parentElement?.removeChild(this.#portal);
   }
   getTooltipPosition() {
-    const rect = this.#elements.at(-1)?.getBoundingClientRect();
-    if (rect) return {
-      top: rect.top + rect.height + scrollY,
-      left: rect.left + scrollX
-    };
+    const domRect = this.#elements.at(-1)?.getBoundingClientRect();
+    if (domRect) return new _utilities_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(domRect).asVector("bottom-left").plus((0,_utilities_dom__WEBPACK_IMPORTED_MODULE_1__.getWindowScrollVector)());
   }
   containsPoint(point) {
     return this.#elements.some(el => new _utilities_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(el.getBoundingClientRect()).contains(point));
   }
   containsIndex(index) {
-    return index >= this.#startIndex && index < this.#endIndex;
+    return this.#indexRange.contains(index, "start-inclusive-end-exclusive");
   }
 }
 
@@ -306,8 +305,8 @@ class LintErrorTooltip {
     document.body.appendChild(this.#tooltip);
   }
   show(nameText, descriptionText, detailsText, {
-    top,
-    left
+    x,
+    y
   }) {
     // so screen readers know what the live update means
     const accessiblePrefix = document.createElement("span");
@@ -325,10 +324,10 @@ class LintErrorTooltip {
     name.style.fontSize = "12px";
     name.style.color = "var(--color-fg-muted)";
     this.#tooltip.replaceChildren(accessiblePrefix, description, details, name);
-    this.#tooltip.style.top = `${top}px`;
-    this.#tooltip.style.left = `${left}px`;
+    this.#tooltip.style.top = `${y}px`;
+    this.#tooltip.style.left = `${x}px`;
     this.#tooltip.style.width = `350px`;
-    this.#tooltip.style.maxWidth = `${document.body.clientWidth - left - 16}px`;
+    this.#tooltip.style.maxWidth = `${document.body.clientWidth - x - 16}px`;
     this.#tooltip.removeAttribute("hidden");
   }
   hide() {
@@ -414,8 +413,8 @@ class LintedMarkdownEditor {
    * Return a list of rects for the given range. If the range extends over multiple lines,
    * multiple rects will be returned.
    */
-  getRangeRects(start, end) {
-    return this.#characterCoordinatesCalculator.getClientRects(start, end);
+  getRangeRects(characterIndexes) {
+    return this.#characterCoordinatesCalculator.getClientRects(characterIndexes);
   }
   getBoundingClientRect() {
     return this.#textarea.getBoundingClientRect();
@@ -479,6 +478,23 @@ class LintedMarkdownEditor {
 
 /***/ }),
 
+/***/ "./src/utilities/dom.ts":
+/*!******************************!*\
+  !*** ./src/utilities/dom.ts ***!
+  \******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "getWindowScrollVector": () => (/* binding */ getWindowScrollVector)
+/* harmony export */ });
+/* harmony import */ var _vector__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./vector */ "./src/utilities/vector.ts");
+
+const getWindowScrollVector = () => new _vector__WEBPACK_IMPORTED_MODULE_0__.Vector(window.scrollX, window.scrollY);
+
+/***/ }),
+
 /***/ "./src/utilities/format.ts":
 /*!*********************************!*\
   !*** ./src/utilities/format.ts ***!
@@ -538,6 +554,38 @@ const lintMarkdown = markdown => markdownlint__WEBPACK_IMPORTED_MODULE_0___defau
 
 /***/ }),
 
+/***/ "./src/utilities/number-range.ts":
+/*!***************************************!*\
+  !*** ./src/utilities/number-range.ts ***!
+  \***************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "NumberRange": () => (/* binding */ NumberRange)
+/* harmony export */ });
+class NumberRange {
+  constructor(start, end) {
+    this.start = Math.min(start, end);
+    this.end = Math.max(start, end);
+  }
+  contains(value, mode) {
+    switch (mode) {
+      case "inclusive":
+        return value >= this.start && value <= this.end;
+      case "exclusive":
+        return value > this.start && value < this.end;
+      case "start-inclusive-end-exclusive":
+        return value >= this.start && value < this.end;
+      case "start-exclusive-end-inclusive":
+        return value > this.start && value <= this.end;
+    }
+  }
+}
+
+/***/ }),
+
 /***/ "./src/utilities/observe.ts":
 /*!**********************************!*\
   !*** ./src/utilities/observe.ts ***!
@@ -586,7 +634,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Rect": () => (/* binding */ Rect)
 /* harmony export */ });
-/* harmony import */ var _vector__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./vector */ "./src/utilities/vector.ts");
+/* harmony import */ var _number_range__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./number-range */ "./src/utilities/number-range.ts");
+/* harmony import */ var _vector__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./vector */ "./src/utilities/vector.ts");
+
 
 
 /**
@@ -621,10 +671,10 @@ class Rect {
    * Return `true` if `rect` is entirely contained by `otherRect`.
    */
   isContainedBy(other) {
-    return this.top > other.top && this.bottom < other.bottom && this.left > other.left && this.right < other.right;
+    return other.contains(this.asVector("top-left")) && other.contains(this.asVector("bottom-right"));
   }
   contains(point) {
-    return point.x >= this.left && point.x <= this.right && point.y >= this.top && point.y <= this.bottom;
+    return this.xRange.contains(point.x, "inclusive") && this.yRange.contains(point.y, "inclusive");
   }
   get left() {
     return this.x;
@@ -638,19 +688,35 @@ class Rect {
   get bottom() {
     return this.top + this.height;
   }
-  asVector() {
-    return new _vector__WEBPACK_IMPORTED_MODULE_0__.Vector(this.x, this.y);
+  get xRange() {
+    return new _number_range__WEBPACK_IMPORTED_MODULE_0__.NumberRange(this.left, this.right);
   }
-  replaceVector(newVector) {
+  get yRange() {
+    return new _number_range__WEBPACK_IMPORTED_MODULE_0__.NumberRange(this.top, this.bottom);
+  }
+  asVector(corner = "top-left") {
+    switch (corner) {
+      case "top-left":
+        return new _vector__WEBPACK_IMPORTED_MODULE_1__.Vector(this.left, this.top);
+      case "top-right":
+        return new _vector__WEBPACK_IMPORTED_MODULE_1__.Vector(this.right, this.top);
+      case "bottom-left":
+        return new _vector__WEBPACK_IMPORTED_MODULE_1__.Vector(this.left, this.bottom);
+      case "bottom-right":
+        return new _vector__WEBPACK_IMPORTED_MODULE_1__.Vector(this.right, this.bottom);
+    }
+  }
+  translate(vector) {
+    const {
+      x,
+      y
+    } = this.asVector().plus(vector);
     return new Rect({
       width: this.width,
       height: this.height,
-      x: newVector.x,
-      y: newVector.y
+      x,
+      y
     });
-  }
-  translate(vector) {
-    return this.replaceVector(this.asVector().plus(vector));
   }
 }
 
@@ -721,11 +787,13 @@ class TextareaRange {
 
   /**
    * Return the viewport-relative client rects of the range. If the range has any line
-   * breaks, this will return multiple rects.
-   * @param start Index of the start of the range, from 0.
-   * @param end Index of the character after the end of the range.
+   * breaks, this will return multiple rects. Will include the start char and exclude the
+   * end char.
    */
-  getClientRects(start, end) {
+  getClientRects({
+    start,
+    end
+  }) {
     this.#refreshText();
     const textNode = this.#div.childNodes[0];
     if (!textNode) return [];

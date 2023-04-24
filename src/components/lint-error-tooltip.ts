@@ -1,6 +1,8 @@
 //@ts-check
 "use strict";
 
+import {Vector} from "../utilities/vector";
+
 export class LintErrorTooltip {
   #tooltip;
 
@@ -28,7 +30,7 @@ export class LintErrorTooltip {
     nameText: string,
     descriptionText: string,
     detailsText: string,
-    { top, left }: { top: number; left: number }
+    { x, y }: Vector
   ) {
     // so screen readers know what the live update means
     const accessiblePrefix = document.createElement("span");
@@ -51,10 +53,10 @@ export class LintErrorTooltip {
 
     this.#tooltip.replaceChildren(accessiblePrefix, description, details, name);
 
-    this.#tooltip.style.top = `${top}px`;
-    this.#tooltip.style.left = `${left}px`;
+    this.#tooltip.style.top = `${y}px`;
+    this.#tooltip.style.left = `${x}px`;
     this.#tooltip.style.width = `350px`;
-    this.#tooltip.style.maxWidth = `${document.body.clientWidth - left - 16}px`;
+    this.#tooltip.style.maxWidth = `${document.body.clientWidth - x - 16}px`;
 
     this.#tooltip.removeAttribute("hidden");
   }

@@ -1,3 +1,4 @@
+import {NumberRange} from "./number-range";
 import {Vector} from "./vector";
 
 /**
@@ -39,19 +40,15 @@ export class Rect implements DOMRect {
    */
   isContainedBy(other: Rect) {
     return (
-      this.top > other.top &&
-      this.bottom < other.bottom &&
-      this.left > other.left &&
-      this.right < other.right
+      other.contains(this.asVector("top-left")) &&
+      other.contains(this.asVector("bottom-right"))
     );
   }
 
   contains(point: Vector) {
     return (
-      point.x >= this.left &&
-      point.x <= this.right &&
-      point.y >= this.top &&
-      point.y <= this.bottom
+      this.xRange.contains(point.x, "inclusive") &&
+      this.yRange.contains(point.y, "inclusive")
     );
   }
 
@@ -71,20 +68,40 @@ export class Rect implements DOMRect {
     return this.top + this.height;
   }
 
-  asVector() {
-    return new Vector(this.x, this.y);
+  get xRange() {
+    return new NumberRange(this.left, this.right);
   }
 
-  replaceVector(newVector: Vector) {
-    return new Rect({
-      width: this.width,
-      height: this.height,
-      x: newVector.x,
-      y: newVector.y,
-    });
+  get yRange() {
+    return new NumberRange(this.top, this.bottom);
+  }
+
+  asVector(
+    corner:
+      | "top-left"
+      | "top-right"
+      | "bottom-left"
+      | "bottom-right" = "top-left"
+  ) {
+    switch (corner) {
+      case "top-left":
+        return new Vector(this.left, this.top);
+      case "top-right":
+        return new Vector(this.right, this.top);
+      case "bottom-left":
+        return new Vector(this.left, this.bottom);
+      case "bottom-right":
+        return new Vector(this.right, this.bottom);
+    }
   }
 
   translate(vector: Vector) {
-    return this.replaceVector(this.asVector().plus(vector));
+    const {x, y} = this.asVector().plus(vector);
+    return new Rect({
+      width: this.width,
+      height: this.height,
+      x,
+      y,
+    });
   }
 }

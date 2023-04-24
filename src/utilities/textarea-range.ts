@@ -1,6 +1,7 @@
 // Note that some browsers, such as Firefox, do not concatenate properties
 // into their shorthand (e.g. padding-top, padding-bottom etc. -> padding),
 
+import {NumberRange} from "./number-range";
 import {Rect} from "./rect";
 import {Vector} from "./vector";
 
@@ -81,11 +82,10 @@ export class TextareaRange {
 
   /**
    * Return the viewport-relative client rects of the range. If the range has any line
-   * breaks, this will return multiple rects.
-   * @param start Index of the start of the range, from 0.
-   * @param end Index of the character after the end of the range.
+   * breaks, this will return multiple rects. Will include the start char and exclude the
+   * end char.
    */
-  getClientRects(start: number, end: number) {
+  getClientRects({start, end}: NumberRange) {
     this.#refreshText();
 
     const textNode = this.#div.childNodes[0];

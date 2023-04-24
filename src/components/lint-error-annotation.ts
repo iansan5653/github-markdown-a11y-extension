@@ -2,15 +2,8 @@ import {LintError} from "markdownlint";
 import {LintedMarkdownEditor} from "./linted-markdown-editor";
 import {Rect} from "../utilities/rect";
 import {Vector} from "../utilities/vector";
-
-interface ErrorLineChunk {
-  top: number;
-  left: number;
-  width: number;
-  startIndex: number;
-  endIndex: number;
-  height: number;
-}
+import {getWindowScrollVector} from "../utilities/dom";
+import {NumberRange} from "../utilities/number-range";
 
 export class LintErrorAnnotation {
   readonly name: string;
@@ -21,8 +14,7 @@ export class LintErrorAnnotation {
   readonly #portal: HTMLElement;
   readonly #elements: readonly HTMLElement[] = [];
 
-  readonly #startIndex: number;
-  readonly #endIndex: number;
+  readonly #indexRange: NumberRange;
 
   constructor(
     error: LintError,
@@ -46,21 +38,22 @@ export class LintErrorAnnotation {
     const startCol = (error.errorRange?.[0] ?? 1) - 1;
     const length = error.errorRange?.[1] ?? line.length - startCol;
 
-    this.#startIndex = prevLines.reduce(
+    const startIndex = prevLines.reduce(
       (t, l) => t + l.length + 1 /* +1 for newline char */,
       startCol
     );
-    this.#endIndex = this.#startIndex + length;
+    const endIndex = startIndex + length;
+    this.#indexRange = new NumberRange(startIndex, endIndex);
 
     const editorRect = new Rect(editor.getBoundingClientRect());
-    const scrollVector = new Vector(window.scrollX, window.scrollY);
+    const scrollVector = getWindowScrollVector();
 
     // The range rectangles are tight around the characters; we'd rather fill the line height if possible
     const lineHeight = editor.getLineHeight();
 
     const elements: HTMLElement[] = [];
     // render an annotation element for each line separately
-    for (const rect of editor.getRangeRects(this.#startIndex, this.#endIndex)) {
+    for (const rect of editor.getRangeRects(this.#indexRange)) {
       // suppress when out of bounds
       if (!rect.isContainedBy(editorRect)) continue;
 
@@ -89,9 +82,11 @@ export class LintErrorAnnotation {
   }
 
   getTooltipPosition() {
-    const rect = this.#elements.at(-1)?.getBoundingClientRect();
-    if (rect)
-      return {top: rect.top + rect.height + scrollY, left: rect.left + scrollX};
+    const domRect = this.#elements.at(-1)?.getBoundingClientRect();
+    if (domRect)
+      return new Rect(domRect)
+        .asVector("bottom-left")
+        .plus(getWindowScrollVector());
   }
 
   containsPoint(point: Vector) {
@@ -101,6 +96,6 @@ export class LintErrorAnnotation {
   }
 
   containsIndex(index: number) {
-    return index >= this.#startIndex && index < this.#endIndex;
+    return this.#indexRange.contains(index, "start-inclusive-end-exclusive");
   }
 }
