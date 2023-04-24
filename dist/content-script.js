@@ -684,7 +684,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "formatList": () => (/* binding */ formatList)
 /* harmony export */ });
-const formatList = (items, conjunction) => {
+function formatList(items, conjunction) {
   if (items.length > 2) {
     items.push(`${conjunction} ${items.pop()}`);
     return items.join(", ");
@@ -695,7 +695,7 @@ const formatList = (items, conjunction) => {
   } else {
     return items[0];
   }
-};
+}
 
 /***/ }),
 

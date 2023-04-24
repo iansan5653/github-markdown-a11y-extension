@@ -1,4 +1,4 @@
-export const formatList = (items: string[], conjunction: string) => {
+export function formatList(items: string[], conjunction: string) {
   if (items.length > 2) {
     items.push(`${conjunction} ${items.pop()}`);
     return items.join(", ");
@@ -9,4 +9,4 @@ export const formatList = (items: string[], conjunction: string) => {
   } else {
     return items[0];
   }
-};
+}
