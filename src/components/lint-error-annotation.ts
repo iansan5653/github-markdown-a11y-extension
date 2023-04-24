@@ -49,7 +49,7 @@ export class LintErrorAnnotation {
     const scrollVector = getWindowScrollVector();
 
     // The range rectangles are tight around the characters; we'd rather fill the line height if possible
-    const lineHeight = editor.getLineHeight();
+    const cssLineHeight = editor.getLineHeight();
 
     const elements: HTMLElement[] = [];
     // render an annotation element for each line separately
@@ -61,15 +61,20 @@ export class LintErrorAnnotation {
       // (document-relative) so we have to add the window scroll position
       const absoluteRect = rect.translate(scrollVector);
 
+      // We want ranges spanning multiple lines to look like one annotation, so we need to
+      // expand them to fill the gap around the lines
+      const lineHeight = cssLineHeight ?? rect.height * 1.2;
+      const scaledRect = absoluteRect.scaleY(lineHeight / absoluteRect.height);
+
       const annotation = document.createElement("span");
       annotation.style.position = "absolute";
-      annotation.style.top = `${absoluteRect.top + scrollY - 2}px`;
-      annotation.style.left = `${absoluteRect.left + scrollX}px`;
-      annotation.style.width = `${rect.width}px`;
+      annotation.style.top = `${scaledRect.top}px`;
+      annotation.style.left = `${scaledRect.left}px`;
+      annotation.style.width = `${scaledRect.width}px`;
       annotation.style.backgroundColor = "var(--color-danger-emphasis)";
       annotation.style.opacity = "0.2";
       // 1.2 seems to be typical default line height
-      annotation.style.height = `${lineHeight ?? rect.height * 1.2}px`;
+      annotation.style.height = `${scaledRect.height}px`;
       annotation.style.pointerEvents = "none";
       elements.push(annotation);
     }

@@ -231,7 +231,7 @@ class LintErrorAnnotation {
     const scrollVector = (0,_utilities_dom__WEBPACK_IMPORTED_MODULE_1__.getWindowScrollVector)();
 
     // The range rectangles are tight around the characters; we'd rather fill the line height if possible
-    const lineHeight = editor.getLineHeight();
+    const cssLineHeight = editor.getLineHeight();
     const elements = [];
     // render an annotation element for each line separately
     for (const rect of editor.getRangeRects(this.#indexRange)) {
@@ -241,15 +241,20 @@ class LintErrorAnnotation {
       // The rects are viewport-relative, but the annotations are absolute positioned
       // (document-relative) so we have to add the window scroll position
       const absoluteRect = rect.translate(scrollVector);
+
+      // We want ranges spanning multiple lines to look like one annotation, so we need to
+      // expand them to fill the gap around the lines
+      const lineHeight = cssLineHeight ?? rect.height * 1.2;
+      const scaledRect = absoluteRect.scaleY(lineHeight / absoluteRect.height);
       const annotation = document.createElement("span");
       annotation.style.position = "absolute";
-      annotation.style.top = `${absoluteRect.top + scrollY - 2}px`;
-      annotation.style.left = `${absoluteRect.left + scrollX}px`;
-      annotation.style.width = `${rect.width}px`;
+      annotation.style.top = `${scaledRect.top}px`;
+      annotation.style.left = `${scaledRect.left}px`;
+      annotation.style.width = `${scaledRect.width}px`;
       annotation.style.backgroundColor = "var(--color-danger-emphasis)";
       annotation.style.opacity = "0.2";
       // 1.2 seems to be typical default line height
-      annotation.style.height = `${lineHeight ?? rect.height * 1.2}px`;
+      annotation.style.height = `${scaledRect.height}px`;
       annotation.style.pointerEvents = "none";
       elements.push(annotation);
     }
@@ -638,7 +643,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _vector__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./vector */ "./src/utilities/vector.ts");
 
 
-
 /**
  * Makes `DOMRect` easier to work with.
  */
@@ -653,6 +657,19 @@ class Rect {
     this.y = y;
     this.height = height;
     this.width = width;
+  }
+  copy({
+    x = this.x,
+    y = this.y,
+    height = this.height,
+    width = this.width
+  }) {
+    return new Rect({
+      x,
+      y,
+      height,
+      width
+    });
   }
   toJSON() {
     JSON.stringify({
@@ -707,15 +724,13 @@ class Rect {
     }
   }
   translate(vector) {
-    const {
-      x,
-      y
-    } = this.asVector().plus(vector);
-    return new Rect({
-      width: this.width,
-      height: this.height,
-      x,
-      y
+    return this.copy(this.asVector().plus(vector));
+  }
+  scaleY(factor) {
+    const scaledHeight = this.height * factor;
+    const deltaY = (this.height - scaledHeight) / 2;
+    return this.translate(new _vector__WEBPACK_IMPORTED_MODULE_1__.Vector(0, deltaY)).copy({
+      height: scaledHeight
     });
   }
 }
