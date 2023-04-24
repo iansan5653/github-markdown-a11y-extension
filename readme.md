@@ -8,7 +8,7 @@ Markdown Accessibility Checker is a Chrome extension for validating Markdown in 
 
 For now, the extension must be manually installed. In the future it will be published in the extension stores for easier install.
 
->> **Note**: If you use `git clone` to get the repo and you keep that around after you install the extension, you can get the latest updates with a simple `git pull` then click the 'Refresh' button in the chrome://extensions/ page tools.
+> **Note**: If you use `git clone` to get the repo and you keep that around after you install the extension, you can get the latest updates with a simple `git pull` then click the 'Refresh' button in the chrome://extensions/ page tools.
 
 This has only been tested with Chrome, but theoretically it should work in Firefox as well.
 
