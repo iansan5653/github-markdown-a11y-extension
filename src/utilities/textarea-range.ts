@@ -1,5 +1,9 @@
 // Note that some browsers, such as Firefox, do not concatenate properties
 // into their shorthand (e.g. padding-top, padding-bottom etc. -> padding),
+
+import {Rect} from "./rect";
+import {Vector} from "./vector";
+
 // so we have to list every single property explicitly.
 const propertiesToCopy = [
   "direction", // RTL support
@@ -42,90 +46,82 @@ const propertiesToCopy = [
   "MozTabSize" as "tabSize", // prefixed version for Firefox <= 52
 ] as const satisfies ReadonlyArray<keyof CSSStyleDeclaration>;
 
-export interface Coordinates {
-  top: number;
-  left: number;
-  height: number;
-}
-
 /**
- * Obtain the coordinates (px) of the top left of a character in an input, relative to
- * the viewport.
- *
- * Forked from https://github.com/primer/react/blob/src/drafts/utils/character-coordinates.ts,
- * which was forked from https://github.com/koddsson/textarea-caret-position, which was
- * forked from https://github.com/component/textarea-caret-position.
+ * The `Range` API doesn't work well with `textarea` elements, so this creates a duplicate
+ * element and uses that instead. Provides a limited API wrapping around adjusted `Range`
+ * APIs.
  */
-// Using a class, we can save a ton of calculation per-character by reusing the same parent div. This does risk
-export class CharacterCoordinatesCalculator {
-  readonly #element: HTMLTextAreaElement | HTMLInputElement;
+export class TextareaRange {
+  readonly #element: HTMLTextAreaElement;
   readonly #div: HTMLDivElement;
   readonly #mutationObserver: MutationObserver;
   readonly #resizeObserver: ResizeObserver;
+  readonly #range: Range;
 
-  #borderTopWidth: number = 0;
-  #borderLeftWidth: number = 0;
-  #lineHeight: number = 0;
-
-  constructor(element: HTMLTextAreaElement | HTMLInputElement) {
-    this.#element = element;
+  constructor(target: HTMLTextAreaElement) {
+    this.#element = target;
 
     // The mirror div will replicate the textarea's style
     const div = document.createElement("div");
     this.#div = div;
     document.body.appendChild(div);
 
-    this.#refresh();
+    this.#refreshStyles();
 
-    this.#mutationObserver = new MutationObserver(() => this.#refresh());
-    this.#mutationObserver.observe(this.#element, {attributes: true});
+    this.#mutationObserver = new MutationObserver(() => this.#refreshStyles());
+    this.#mutationObserver.observe(this.#element, {
+      attributeFilter: ["style"],
+    });
 
-    this.#resizeObserver = new ResizeObserver(() => this.#refresh());
+    this.#resizeObserver = new ResizeObserver(() => this.#refreshStyles());
     this.#resizeObserver.observe(this.#element);
+
+    this.#range = document.createRange();
   }
 
-  getCoordinates(index: number) {
-    this.#div.textContent = this.#element.value.substring(0, index);
+  /**
+   * Return the viewport-relative client rects of the range. If the range has any line
+   * breaks, this will return multiple rects.
+   * @param start Index of the start of the range, from 0.
+   * @param end Index of the character after the end of the range.
+   */
+  getClientRects(start: number, end: number) {
+    this.#refreshText();
 
-    // The second special handling for input type="text" vs textarea:
-    // spaces need to be replaced with non-breaking spaces - http://stackoverflow.com/a/13402035/1269037
-    if (this.#element instanceof HTMLInputElement)
-      this.#div.textContent = this.#div.textContent.replace(/\s/g, "\u00a0");
+    const textNode = this.#div.childNodes[0];
+    if (!textNode) return [];
 
-    const span = document.createElement("span");
-    // Wrapping must be replicated *exactly*, including when a long word gets
-    // onto the next line, with whitespace at the end of the line before (#7).
-    // The  *only* reliable way to do that is to copy the *entire* rest of the
-    // textarea's content into the <span> created at the caret position.
-    // For inputs, '.' is enough because there is no wrapping.
-    span.textContent = this.#element.value.substring(index) || "."; // because a completely empty faux span doesn't render at all
-    this.#div.appendChild(span);
+    this.#range.setStart(textNode, start);
+    this.#range.setEnd(textNode, end);
 
-    const {top: viewportOffsetTop, left: viewportOffsetLeft} =
-      this.#element.getBoundingClientRect();
+    // The div is not in the same place as the textarea so we need to subtract the div
+    // position and add the textarea position
+    const divPosition = new Rect(this.#div.getBoundingClientRect()).asVector();
+    const textareaPosition = new Rect(
+      this.#element.getBoundingClientRect()
+    ).asVector();
 
-    return {
-      top:
-        span.offsetTop +
-        this.#borderTopWidth -
-        this.#element.scrollTop +
-        viewportOffsetTop,
-      left:
-        span.offsetLeft +
-        this.#borderLeftWidth -
-        this.#element.scrollLeft +
-        viewportOffsetLeft,
-      height: this.#lineHeight,
-    };
+    // The div is not scrollable so it does not have scroll adjustment built in
+    const scrollOffset = new Vector(
+      this.#element.scrollLeft,
+      this.#element.scrollTop
+    );
+
+    const netTranslate = divPosition
+      .negate()
+      .plus(textareaPosition)
+      .minus(scrollOffset);
+
+    return Array.from(this.#range.getClientRects()).map((domRect) =>
+      new Rect(domRect).translate(netTranslate)
+    );
   }
 
   disconnect() {
     this.#div.parentElement?.removeChild(this.#div);
-    this.#mutationObserver.disconnect();
-    this.#resizeObserver.disconnect();
   }
 
-  #refresh() {
+  #refreshStyles() {
     console.log("refresh");
     const style = this.#div.style;
     const computed = window.getComputedStyle(this.#element);
@@ -200,9 +196,12 @@ export class CharacterCoordinatesCalculator {
     } else {
       style.overflow = "hidden"; // for Chrome to not render a scrollbar; IE keeps overflowY = 'scroll'
     }
+  }
 
-    this.#borderLeftWidth = parseInt(computed.borderLeftWidth);
-    this.#borderTopWidth = parseInt(computed.borderTopWidth);
-    this.#lineHeight = lineHeight;
+  #refreshText() {
+    this.#div.textContent =
+      this.#element instanceof HTMLInputElement
+        ? this.#element.value.replace(/\s/g, "\u00a0")
+        : this.#element.value;
   }
 }

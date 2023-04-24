@@ -203,6 +203,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "LintErrorAnnotation": () => (/* binding */ LintErrorAnnotation)
 /* harmony export */ });
+/* harmony import */ var _utilities_rect__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utilities/rect */ "./src/utilities/rect.ts");
+/* harmony import */ var _utilities_vector__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utilities/vector */ "./src/utilities/vector.ts");
+
+
 class LintErrorAnnotation {
   #portal;
   #elements = [];
@@ -221,77 +225,33 @@ class LintErrorAnnotation {
     const length = error.errorRange?.[1] ?? line.length - startCol;
     this.#startIndex = prevLines.reduce((t, l) => t + l.length + 1 /* +1 for newline char */, startCol);
     this.#endIndex = this.#startIndex + length;
+    const editorRect = new _utilities_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(editor.getBoundingClientRect());
+    const scrollVector = new _utilities_vector__WEBPACK_IMPORTED_MODULE_1__.Vector(window.scrollX, window.scrollY);
 
-    // It's not enought to just split by '/n' because we may have soft line wraps to deal with as well.
-    // Calculating coordinates for every character is too expensive, so we do a binary search to chunk
-    // the error by soft lines, using a Map to cache already-calculated coordinates.
-    const lineChunks = [];
-    const coordsCache = new Map();
-    const calculateChunks = (startIndex, endIndex) => {
-      if (endIndex === startIndex) return; // noop - 0 chars
-
-      const firstCoords = coordsCache.get(startIndex) ?? editor.getCharacterCoordinates(startIndex);
-      coordsCache.set(startIndex, firstCoords);
-      const lastCoords = coordsCache.get(endIndex) ?? editor.getCharacterCoordinates(endIndex);
-      coordsCache.set(endIndex, lastCoords);
-
-      // If in same line, append to previous chunk or create new. Otherwise, split in half and try again
-      if (firstCoords.top === lastCoords.top) {
-        const width = Math.abs(lastCoords.left - firstCoords.left);
-        const last = lineChunks.at(-1);
-        if (last && last.top === firstCoords.top) {
-          last.width += width;
-          last.endIndex = endIndex;
-        } else {
-          lineChunks.push({
-            ...firstCoords,
-            width,
-            startIndex,
-            endIndex
-          });
-        }
-      } else if (endIndex === startIndex + 1) {
-        // Means that the startIndex is a char at the end of a soft break. There's no char after this
-        // in the line from which to calculate 1 char width. So we just guess how wide this char is by
-        // getting the average char width in this chunk
-        const last = lineChunks.at(-1);
-        if (last) {
-          last.width += last.width / (last.endIndex - last.startIndex);
-          last.endIndex = endIndex;
-        }
-      } else if (startIndex !== endIndex) {
-        const midIndex = Math.floor((startIndex + endIndex) / 2);
-        calculateChunks(startIndex, midIndex);
-        calculateChunks(midIndex, endIndex);
-      }
-    };
-    calculateChunks(this.#startIndex, this.#endIndex);
-    const editorRect = editor.getBoundingClientRect();
-
-    // Build the highlight elements, one per chunk
+    // The range rectangles are tight around the characters; we'd rather fill the line height if possible
+    const lineHeight = editor.getLineHeight();
     const elements = [];
     // render an annotation element for each line separately
-    for (const {
-      left,
-      width,
-      top,
-      height
-    } of lineChunks) {
+    for (const rect of editor.getRangeRects(this.#startIndex, this.#endIndex)) {
       // suppress when out of bounds
-      if (top < editorRect.top || top + height > editorRect.bottom || left < editorRect.left || left + width > editorRect.right) continue;
+      if (!rect.isContainedBy(editorRect)) continue;
+
+      // The rects are viewport-relative, but the annotations are absolute positioned
+      // (document-relative) so we have to add the window scroll position
+      const absoluteRect = rect.translate(scrollVector);
       const annotation = document.createElement("span");
       annotation.style.position = "absolute";
-      // account for window scroll because they are absolute, not fixed
-      annotation.style.top = `${top + scrollY - 2}px`;
-      annotation.style.left = `${left + scrollX}px`;
-      annotation.style.width = `${width}px`;
+      annotation.style.top = `${absoluteRect.top + scrollY - 2}px`;
+      annotation.style.left = `${absoluteRect.left + scrollX}px`;
+      annotation.style.width = `${rect.width}px`;
       annotation.style.backgroundColor = "var(--color-danger-emphasis)";
       annotation.style.opacity = "0.2";
-      annotation.style.height = `${height}px`;
+      // 1.2 seems to be typical default line height
+      annotation.style.height = `${lineHeight ?? rect.height * 1.2}px`;
       annotation.style.pointerEvents = "none";
-      this.#portal.appendChild(annotation);
       elements.push(annotation);
     }
+    this.#portal.replaceChildren(...elements);
     this.#elements = elements;
   }
   disconnect() {
@@ -304,11 +264,8 @@ class LintErrorAnnotation {
       left: rect.left + scrollX
     };
   }
-  containsCoordinates(x, y) {
-    return this.#elements.some(element => {
-      const rect = element.getBoundingClientRect();
-      return x >= rect.left && x <= rect.left + rect.width && y >= rect.top && y <= rect.top + rect.height;
-    });
+  containsPoint(point) {
+    return this.#elements.some(el => new _utilities_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(el.getBoundingClientRect()).contains(point));
   }
   containsIndex(index) {
     return index >= this.#startIndex && index < this.#endIndex;
@@ -395,11 +352,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "LintedMarkdownEditor": () => (/* binding */ LintedMarkdownEditor)
 /* harmony export */ });
-/* harmony import */ var _utilities_character_coordinates__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utilities/character-coordinates */ "./src/utilities/character-coordinates.ts");
+/* harmony import */ var _utilities_textarea_range__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utilities/textarea-range */ "./src/utilities/textarea-range.ts");
 /* harmony import */ var _utilities_format__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utilities/format */ "./src/utilities/format.ts");
 /* harmony import */ var _utilities_lint_markdown__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utilities/lint-markdown */ "./src/utilities/lint-markdown.ts");
 /* harmony import */ var _lint_error_annotation__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./lint-error-annotation */ "./src/components/lint-error-annotation.ts");
+/* harmony import */ var _utilities_vector__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utilities/vector */ "./src/utilities/vector.ts");
 // @ts-check
+
 
 
 
@@ -435,7 +394,7 @@ class LintedMarkdownEditor {
     document.addEventListener("selectionchange", this.#onSelectionChange);
     this.#resizeObserver = new ResizeObserver(this.#onRefresh);
     this.#resizeObserver.observe(textarea);
-    this.#characterCoordinatesCalculator = new _utilities_character_coordinates__WEBPACK_IMPORTED_MODULE_0__.CharacterCoordinatesCalculator(textarea);
+    this.#characterCoordinatesCalculator = new _utilities_textarea_range__WEBPACK_IMPORTED_MODULE_0__.TextareaRange(textarea);
   }
   disconnect() {
     this.#textarea.removeEventListener("input", this.#onRefresh);
@@ -450,11 +409,20 @@ class LintedMarkdownEditor {
     this.#annotationsPortal.parentElement?.removeChild(this.#annotationsPortal);
     this.#statusContainer.parentElement?.removeChild(this.#statusContainer);
   }
-  getCharacterCoordinates(index) {
-    return this.#characterCoordinatesCalculator.getCoordinates(index);
+
+  /**
+   * Return a list of rects for the given range. If the range extends over multiple lines,
+   * multiple rects will be returned.
+   */
+  getRangeRects(start, end) {
+    return this.#characterCoordinatesCalculator.getClientRects(start, end);
   }
   getBoundingClientRect() {
     return this.#textarea.getBoundingClientRect();
+  }
+  getLineHeight() {
+    const parsed = parseInt(getComputedStyle(this.#textarea).lineHeight, 10);
+    return Number.isNaN(parsed) ? undefined : parsed;
   }
   get value() {
     return this.#textarea.value;
@@ -479,7 +447,7 @@ class LintedMarkdownEditor {
   }
   #onRefresh = () => this.#lint();
   #onBlur = () => this.#clear();
-  #onMouseMove = event => this.#updatePointerTooltip(event.clientX, event.clientY);
+  #onMouseMove = event => this.#updatePointerTooltip(new _utilities_vector__WEBPACK_IMPORTED_MODULE_4__.Vector(event.clientX, event.clientY));
   #onMouseLeave = () => this.#tooltipAnnotation = null;
   #onSelectionChange = () => {
     // this event only works when applied to the document but we can filter it by detecting focus
@@ -498,178 +466,14 @@ class LintedMarkdownEditor {
     const errors = (0,_utilities_lint_markdown__WEBPACK_IMPORTED_MODULE_2__.lintMarkdown)(this.value) ?? [];
     this.#annotations = errors.map(error => new _lint_error_annotation__WEBPACK_IMPORTED_MODULE_3__.LintErrorAnnotation(error, this, this.#annotationsPortal));
   }
-  #updatePointerTooltip(pointerX, pointerY) {
+  #updatePointerTooltip(pointerLocation) {
     // can't use mouse events on annotations (the easy way) because they have pointer-events: none
-
-    for (const annotation of this.#annotations) if (annotation.containsCoordinates(pointerX, pointerY)) {
-      this.#tooltipAnnotation = annotation;
-      return;
-    }
-    this.#tooltipAnnotation = null;
+    this.#tooltipAnnotation = this.#annotations.find(a => a.containsPoint(pointerLocation)) ?? null;
   }
   #updateCaretTooltip() {
     if (this.#textarea.selectionEnd !== this.#textarea.selectionStart) return;
     const caretIndex = this.#textarea.selectionStart;
-    for (const annotation of this.#annotations) if (annotation.containsIndex(caretIndex)) {
-      this.#tooltipAnnotation = annotation;
-      return;
-    }
-    this.#tooltipAnnotation = null;
-  }
-}
-
-/***/ }),
-
-/***/ "./src/utilities/character-coordinates.ts":
-/*!************************************************!*\
-  !*** ./src/utilities/character-coordinates.ts ***!
-  \************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "CharacterCoordinatesCalculator": () => (/* binding */ CharacterCoordinatesCalculator)
-/* harmony export */ });
-// Note that some browsers, such as Firefox, do not concatenate properties
-// into their shorthand (e.g. padding-top, padding-bottom etc. -> padding),
-// so we have to list every single property explicitly.
-const propertiesToCopy = ["direction",
-// RTL support
-"boxSizing", "width",
-// on Chrome and IE, exclude the scrollbar, so the mirror div wraps exactly as the textarea does
-"height", "overflowX", "overflowY",
-// copy the scrollbar for IE
-
-"borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth", "borderStyle", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft",
-// https://developer.mozilla.org/en-US/docs/Web/CSS/font
-"fontStyle", "fontVariant", "fontWeight", "fontStretch", "fontSize", "fontSizeAdjust", "lineHeight", "fontFamily", "textAlign", "textTransform", "textIndent", "textDecoration",
-// might not make a difference, but better be safe
-
-"letterSpacing", "wordSpacing", "tabSize", "MozTabSize" // prefixed version for Firefox <= 52
-];
-
-/**
- * Obtain the coordinates (px) of the top left of a character in an input, relative to
- * the viewport.
- *
- * Forked from https://github.com/primer/react/blob/src/drafts/utils/character-coordinates.ts,
- * which was forked from https://github.com/koddsson/textarea-caret-position, which was
- * forked from https://github.com/component/textarea-caret-position.
- */ // Using a class, we can save a ton of calculation per-character by reusing the same parent div. This does risk
-class CharacterCoordinatesCalculator {
-  #element;
-  #div;
-  #mutationObserver;
-  #resizeObserver;
-  #borderTopWidth = 0;
-  #borderLeftWidth = 0;
-  #lineHeight = 0;
-  constructor(element) {
-    this.#element = element;
-
-    // The mirror div will replicate the textarea's style
-    const div = document.createElement("div");
-    this.#div = div;
-    document.body.appendChild(div);
-    this.#refresh();
-    this.#mutationObserver = new MutationObserver(() => this.#refresh());
-    this.#mutationObserver.observe(this.#element, {
-      attributes: true
-    });
-    this.#resizeObserver = new ResizeObserver(() => this.#refresh());
-    this.#resizeObserver.observe(this.#element);
-  }
-  getCoordinates(index) {
-    this.#div.textContent = this.#element.value.substring(0, index);
-
-    // The second special handling for input type="text" vs textarea:
-    // spaces need to be replaced with non-breaking spaces - http://stackoverflow.com/a/13402035/1269037
-    if (this.#element instanceof HTMLInputElement) this.#div.textContent = this.#div.textContent.replace(/\s/g, "\u00a0");
-    const span = document.createElement("span");
-    // Wrapping must be replicated *exactly*, including when a long word gets
-    // onto the next line, with whitespace at the end of the line before (#7).
-    // The  *only* reliable way to do that is to copy the *entire* rest of the
-    // textarea's content into the <span> created at the caret position.
-    // For inputs, '.' is enough because there is no wrapping.
-    span.textContent = this.#element.value.substring(index) || "."; // because a completely empty faux span doesn't render at all
-    this.#div.appendChild(span);
-    const {
-      top: viewportOffsetTop,
-      left: viewportOffsetLeft
-    } = this.#element.getBoundingClientRect();
-    return {
-      top: span.offsetTop + this.#borderTopWidth - this.#element.scrollTop + viewportOffsetTop,
-      left: span.offsetLeft + this.#borderLeftWidth - this.#element.scrollLeft + viewportOffsetLeft,
-      height: this.#lineHeight
-    };
-  }
-  disconnect() {
-    this.#div.parentElement?.removeChild(this.#div);
-    this.#mutationObserver.disconnect();
-    this.#resizeObserver.disconnect();
-  }
-  #refresh() {
-    console.log("refresh");
-    const style = this.#div.style;
-    const computed = window.getComputedStyle(this.#element);
-
-    // Lineheight is either a number or the string 'normal'. In that case, fall back to a
-    // rough guess of 1.2 based on MDN: "Desktop browsers use a default value of roughly 1.2".
-    const lineHeight = isNaN(parseInt(computed.lineHeight)) ? parseInt(computed.fontSize) * 1.2 : parseInt(computed.lineHeight);
-    const isInput = this.#element instanceof HTMLInputElement;
-
-    // Default wrapping styles
-    style.whiteSpace = isInput ? "nowrap" : "pre-wrap";
-    style.wordWrap = isInput ? "" : "break-word";
-
-    // Position off-screen
-    style.position = "absolute"; // required to return coordinates properly
-
-    const isFirefox = ("mozInnerScreenX" in window);
-
-    // Transfer the element's properties to the div
-    for (const prop of propertiesToCopy) {
-      if (isInput && prop === "lineHeight") {
-        // Special case for <input>s because text is rendered centered and line height may be != height
-        if (computed.boxSizing === "border-box") {
-          const height = parseInt(computed.height);
-          const outerHeight = parseInt(computed.paddingTop) + parseInt(computed.paddingBottom) + parseInt(computed.borderTopWidth) + parseInt(computed.borderBottomWidth);
-          const targetHeight = outerHeight + lineHeight;
-          if (height > targetHeight) {
-            style.lineHeight = `${height - outerHeight}px`;
-          } else if (height === targetHeight) {
-            style.lineHeight = computed.lineHeight;
-          } else {
-            style.lineHeight = "0";
-          }
-        } else {
-          style.lineHeight = computed.height;
-        }
-      } else if (!isInput && prop === "width" && computed.boxSizing === "border-box") {
-        // With box-sizing: border-box we need to offset the size slightly inwards.  This small difference can compound
-        // greatly in long textareas with lots of wrapping, leading to very innacurate results if not accounted for.
-        // Firefox will return computed styles in floats, like `0.9px`, while chromium might return `1px` for the same element.
-        // Either way we use `parseFloat` to turn `0.9px` into `0.9` and `1px` into `1`
-        const totalBorderWidth = parseFloat(computed.borderLeftWidth) + parseFloat(computed.borderRightWidth);
-        // When a vertical scrollbar is present it shrinks the content. We need to account for this by using clientWidth
-        // instead of width in everything but Firefox. When we do that we also have to account for the border width.
-        const width = isFirefox ? parseFloat(computed.width) - totalBorderWidth : this.#element.clientWidth + totalBorderWidth;
-        style.width = `${width}px`;
-      } else {
-        style[prop] = computed[prop];
-      }
-    }
-    if (isFirefox) {
-      // Firefox lies about the overflow property for textareas: https://bugzilla.mozilla.org/show_bug.cgi?id=984275
-      if (this.#element.scrollHeight > parseInt(computed.height)) style.overflowY = "scroll";
-    } else {
-      style.overflow = "hidden"; // for Chrome to not render a scrollbar; IE keeps overflowY = 'scroll'
-    }
-
-    this.#borderLeftWidth = parseInt(computed.borderLeftWidth);
-    this.#borderTopWidth = parseInt(computed.borderTopWidth);
-    this.#lineHeight = lineHeight;
+    this.#tooltipAnnotation = this.#annotations.find(a => a.containsIndex(caretIndex)) ?? null;
   }
 }
 
@@ -767,6 +571,271 @@ function observeSelector(selector, onAdd) {
     childList: true,
     subtree: true
   });
+}
+
+/***/ }),
+
+/***/ "./src/utilities/rect.ts":
+/*!*******************************!*\
+  !*** ./src/utilities/rect.ts ***!
+  \*******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Rect": () => (/* binding */ Rect)
+/* harmony export */ });
+/* harmony import */ var _vector__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./vector */ "./src/utilities/vector.ts");
+
+
+/**
+ * Makes `DOMRect` easier to work with.
+ */
+class Rect {
+  constructor({
+    x,
+    y,
+    height,
+    width
+  }) {
+    this.x = x;
+    this.y = y;
+    this.height = height;
+    this.width = width;
+  }
+  toJSON() {
+    JSON.stringify({
+      top: this.top,
+      bottom: this.bottom,
+      left: this.left,
+      right: this.right,
+      x: this.x,
+      y: this.y,
+      height: this.height,
+      width: this.width
+    });
+  }
+
+  /**
+   * Return `true` if `rect` is entirely contained by `otherRect`.
+   */
+  isContainedBy(other) {
+    return this.top > other.top && this.bottom < other.bottom && this.left > other.left && this.right < other.right;
+  }
+  contains(point) {
+    return point.x >= this.left && point.x <= this.right && point.y >= this.top && point.y <= this.bottom;
+  }
+  get left() {
+    return this.x;
+  }
+  get right() {
+    return this.left + this.width;
+  }
+  get top() {
+    return this.y;
+  }
+  get bottom() {
+    return this.top + this.height;
+  }
+  asVector() {
+    return new _vector__WEBPACK_IMPORTED_MODULE_0__.Vector(this.x, this.y);
+  }
+  replaceVector(newVector) {
+    return new Rect({
+      width: this.width,
+      height: this.height,
+      x: newVector.x,
+      y: newVector.y
+    });
+  }
+  translate(vector) {
+    return this.replaceVector(this.asVector().plus(vector));
+  }
+}
+
+/***/ }),
+
+/***/ "./src/utilities/textarea-range.ts":
+/*!*****************************************!*\
+  !*** ./src/utilities/textarea-range.ts ***!
+  \*****************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "TextareaRange": () => (/* binding */ TextareaRange)
+/* harmony export */ });
+/* harmony import */ var _rect__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./rect */ "./src/utilities/rect.ts");
+/* harmony import */ var _vector__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./vector */ "./src/utilities/vector.ts");
+// Note that some browsers, such as Firefox, do not concatenate properties
+// into their shorthand (e.g. padding-top, padding-bottom etc. -> padding),
+
+
+
+
+// so we have to list every single property explicitly.
+const propertiesToCopy = ["direction",
+// RTL support
+"boxSizing", "width",
+// on Chrome and IE, exclude the scrollbar, so the mirror div wraps exactly as the textarea does
+"height", "overflowX", "overflowY",
+// copy the scrollbar for IE
+
+"borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth", "borderStyle", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft",
+// https://developer.mozilla.org/en-US/docs/Web/CSS/font
+"fontStyle", "fontVariant", "fontWeight", "fontStretch", "fontSize", "fontSizeAdjust", "lineHeight", "fontFamily", "textAlign", "textTransform", "textIndent", "textDecoration",
+// might not make a difference, but better be safe
+
+"letterSpacing", "wordSpacing", "tabSize", "MozTabSize" // prefixed version for Firefox <= 52
+];
+
+/**
+ * The `Range` API doesn't work well with `textarea` elements, so this creates a duplicate
+ * element and uses that instead. Provides a limited API wrapping around adjusted `Range`
+ * APIs.
+ */
+class TextareaRange {
+  #element;
+  #div;
+  #mutationObserver;
+  #resizeObserver;
+  #range;
+  constructor(target) {
+    this.#element = target;
+
+    // The mirror div will replicate the textarea's style
+    const div = document.createElement("div");
+    this.#div = div;
+    document.body.appendChild(div);
+    this.#refreshStyles();
+    this.#mutationObserver = new MutationObserver(() => this.#refreshStyles());
+    this.#mutationObserver.observe(this.#element, {
+      attributeFilter: ["style"]
+    });
+    this.#resizeObserver = new ResizeObserver(() => this.#refreshStyles());
+    this.#resizeObserver.observe(this.#element);
+    this.#range = document.createRange();
+  }
+
+  /**
+   * Return the viewport-relative client rects of the range. If the range has any line
+   * breaks, this will return multiple rects.
+   * @param start Index of the start of the range, from 0.
+   * @param end Index of the character after the end of the range.
+   */
+  getClientRects(start, end) {
+    this.#refreshText();
+    const textNode = this.#div.childNodes[0];
+    if (!textNode) return [];
+    this.#range.setStart(textNode, start);
+    this.#range.setEnd(textNode, end);
+
+    // The div is not in the same place as the textarea so we need to subtract the div
+    // position and add the textarea position
+    const divPosition = new _rect__WEBPACK_IMPORTED_MODULE_0__.Rect(this.#div.getBoundingClientRect()).asVector();
+    const textareaPosition = new _rect__WEBPACK_IMPORTED_MODULE_0__.Rect(this.#element.getBoundingClientRect()).asVector();
+
+    // The div is not scrollable so it does not have scroll adjustment built in
+    const scrollOffset = new _vector__WEBPACK_IMPORTED_MODULE_1__.Vector(this.#element.scrollLeft, this.#element.scrollTop);
+    const netTranslate = divPosition.negate().plus(textareaPosition).minus(scrollOffset);
+    return Array.from(this.#range.getClientRects()).map(domRect => new _rect__WEBPACK_IMPORTED_MODULE_0__.Rect(domRect).translate(netTranslate));
+  }
+  disconnect() {
+    this.#div.parentElement?.removeChild(this.#div);
+  }
+  #refreshStyles() {
+    console.log("refresh");
+    const style = this.#div.style;
+    const computed = window.getComputedStyle(this.#element);
+
+    // Lineheight is either a number or the string 'normal'. In that case, fall back to a
+    // rough guess of 1.2 based on MDN: "Desktop browsers use a default value of roughly 1.2".
+    const lineHeight = isNaN(parseInt(computed.lineHeight)) ? parseInt(computed.fontSize) * 1.2 : parseInt(computed.lineHeight);
+    const isInput = this.#element instanceof HTMLInputElement;
+
+    // Default wrapping styles
+    style.whiteSpace = isInput ? "nowrap" : "pre-wrap";
+    style.wordWrap = isInput ? "" : "break-word";
+
+    // Position off-screen
+    style.position = "absolute"; // required to return coordinates properly
+
+    const isFirefox = ("mozInnerScreenX" in window);
+
+    // Transfer the element's properties to the div
+    for (const prop of propertiesToCopy) {
+      if (isInput && prop === "lineHeight") {
+        // Special case for <input>s because text is rendered centered and line height may be != height
+        if (computed.boxSizing === "border-box") {
+          const height = parseInt(computed.height);
+          const outerHeight = parseInt(computed.paddingTop) + parseInt(computed.paddingBottom) + parseInt(computed.borderTopWidth) + parseInt(computed.borderBottomWidth);
+          const targetHeight = outerHeight + lineHeight;
+          if (height > targetHeight) {
+            style.lineHeight = `${height - outerHeight}px`;
+          } else if (height === targetHeight) {
+            style.lineHeight = computed.lineHeight;
+          } else {
+            style.lineHeight = "0";
+          }
+        } else {
+          style.lineHeight = computed.height;
+        }
+      } else if (!isInput && prop === "width" && computed.boxSizing === "border-box") {
+        // With box-sizing: border-box we need to offset the size slightly inwards.  This small difference can compound
+        // greatly in long textareas with lots of wrapping, leading to very innacurate results if not accounted for.
+        // Firefox will return computed styles in floats, like `0.9px`, while chromium might return `1px` for the same element.
+        // Either way we use `parseFloat` to turn `0.9px` into `0.9` and `1px` into `1`
+        const totalBorderWidth = parseFloat(computed.borderLeftWidth) + parseFloat(computed.borderRightWidth);
+        // When a vertical scrollbar is present it shrinks the content. We need to account for this by using clientWidth
+        // instead of width in everything but Firefox. When we do that we also have to account for the border width.
+        const width = isFirefox ? parseFloat(computed.width) - totalBorderWidth : this.#element.clientWidth + totalBorderWidth;
+        style.width = `${width}px`;
+      } else {
+        style[prop] = computed[prop];
+      }
+    }
+    if (isFirefox) {
+      // Firefox lies about the overflow property for textareas: https://bugzilla.mozilla.org/show_bug.cgi?id=984275
+      if (this.#element.scrollHeight > parseInt(computed.height)) style.overflowY = "scroll";
+    } else {
+      style.overflow = "hidden"; // for Chrome to not render a scrollbar; IE keeps overflowY = 'scroll'
+    }
+  }
+
+  #refreshText() {
+    this.#div.textContent = this.#element instanceof HTMLInputElement ? this.#element.value.replace(/\s/g, "\u00a0") : this.#element.value;
+  }
+}
+
+/***/ }),
+
+/***/ "./src/utilities/vector.ts":
+/*!*********************************!*\
+  !*** ./src/utilities/vector.ts ***!
+  \*********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Vector": () => (/* binding */ Vector)
+/* harmony export */ });
+class Vector {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+  plus(other) {
+    return new Vector(this.x + other.x, this.y + other.y);
+  }
+  minus(other) {
+    return this.plus(other.negate());
+  }
+  negate() {
+    return new Vector(-this.x, -this.y);
+  }
 }
 
 /***/ }),

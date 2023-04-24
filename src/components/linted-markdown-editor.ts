@@ -2,18 +2,19 @@
 
 "use strict";
 
-import {CharacterCoordinatesCalculator} from "../utilities/character-coordinates";
+import {TextareaRange} from "../utilities/textarea-range";
 import {formatList} from "../utilities/format";
 import {lintMarkdown} from "../utilities/lint-markdown";
 import {LintErrorTooltip} from "./lint-error-tooltip";
 import {LintErrorAnnotation} from "./lint-error-annotation";
+import {Vector} from "../utilities/vector";
 
 export class LintedMarkdownEditor {
   #textarea: HTMLTextAreaElement;
   #annotationsPortal: HTMLElement;
   #statusContainer: HTMLElement;
   #resizeObserver: ResizeObserver;
-  #characterCoordinatesCalculator: CharacterCoordinatesCalculator;
+  #characterCoordinatesCalculator: TextareaRange;
 
   #tooltip: LintErrorTooltip;
 
@@ -49,9 +50,7 @@ export class LintedMarkdownEditor {
     this.#resizeObserver = new ResizeObserver(this.#onRefresh);
     this.#resizeObserver.observe(textarea);
 
-    this.#characterCoordinatesCalculator = new CharacterCoordinatesCalculator(
-      textarea
-    );
+    this.#characterCoordinatesCalculator = new TextareaRange(textarea);
   }
 
   disconnect() {
@@ -71,12 +70,21 @@ export class LintedMarkdownEditor {
     this.#statusContainer.parentElement?.removeChild(this.#statusContainer);
   }
 
-  getCharacterCoordinates(index: number) {
-    return this.#characterCoordinatesCalculator.getCoordinates(index);
+  /**
+   * Return a list of rects for the given range. If the range extends over multiple lines,
+   * multiple rects will be returned.
+   */
+  getRangeRects(start: number, end: number) {
+    return this.#characterCoordinatesCalculator.getClientRects(start, end);
   }
 
   getBoundingClientRect() {
     return this.#textarea.getBoundingClientRect();
+  }
+
+  getLineHeight() {
+    const parsed = parseInt(getComputedStyle(this.#textarea).lineHeight, 10);
+    return Number.isNaN(parsed) ? undefined : parsed;
   }
 
   get value() {
@@ -129,7 +137,7 @@ export class LintedMarkdownEditor {
   #onBlur = () => this.#clear();
 
   #onMouseMove = (event: MouseEvent) =>
-    this.#updatePointerTooltip(event.clientX, event.clientY);
+    this.#updatePointerTooltip(new Vector(event.clientX, event.clientY));
 
   #onMouseLeave = () => (this.#tooltipAnnotation = null);
 
@@ -160,28 +168,17 @@ export class LintedMarkdownEditor {
     );
   }
 
-  #updatePointerTooltip(pointerX: number, pointerY: number) {
+  #updatePointerTooltip(pointerLocation: Vector) {
     // can't use mouse events on annotations (the easy way) because they have pointer-events: none
-
-    for (const annotation of this.#annotations)
-      if (annotation.containsCoordinates(pointerX, pointerY)) {
-        this.#tooltipAnnotation = annotation;
-        return;
-      }
-
-    this.#tooltipAnnotation = null;
+    this.#tooltipAnnotation =
+      this.#annotations.find((a) => a.containsPoint(pointerLocation)) ?? null;
   }
 
   #updateCaretTooltip() {
     if (this.#textarea.selectionEnd !== this.#textarea.selectionStart) return;
     const caretIndex = this.#textarea.selectionStart;
 
-    for (const annotation of this.#annotations)
-      if (annotation.containsIndex(caretIndex)) {
-        this.#tooltipAnnotation = annotation;
-        return;
-      }
-
-    this.#tooltipAnnotation = null;
+    this.#tooltipAnnotation =
+      this.#annotations.find((a) => a.containsIndex(caretIndex)) ?? null;
   }
 }
