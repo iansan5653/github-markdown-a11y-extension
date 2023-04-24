@@ -210,10 +210,12 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class LintErrorAnnotation {
+  #editor;
   #portal;
   #elements = [];
   #indexRange;
   constructor(error, editor, portal) {
+    this.#editor = editor;
     this.name = error.ruleNames?.slice(0, 2).join(": ") ?? "";
     this.description = error.ruleDescription ?? "";
     this.details = error.errorDetail ?? "";
@@ -227,14 +229,30 @@ class LintErrorAnnotation {
     const startIndex = prevLines.reduce((t, l) => t + l.length + 1 /* +1 for newline char */, startCol);
     const endIndex = startIndex + length;
     this.#indexRange = new _utilities_geometry_number_range__WEBPACK_IMPORTED_MODULE_2__.NumberRange(startIndex, endIndex);
-    const editorRect = new _utilities_geometry_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(editor.getBoundingClientRect());
+    this.recalculatePosition();
+  }
+  disconnect() {
+    this.#portal.parentElement?.removeChild(this.#portal);
+  }
+  getTooltipPosition() {
+    const domRect = this.#elements.at(-1)?.getBoundingClientRect();
+    if (domRect) return new _utilities_geometry_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(domRect).asVector("bottom-left").plus((0,_utilities_dom__WEBPACK_IMPORTED_MODULE_1__.getWindowScrollVector)());
+  }
+  containsPoint(point) {
+    return this.#elements.some(el => new _utilities_geometry_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(el.getBoundingClientRect()).contains(point));
+  }
+  containsIndex(index) {
+    return this.#indexRange.contains(index, "start-inclusive-end-exclusive");
+  }
+  recalculatePosition() {
+    const editorRect = new _utilities_geometry_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(this.#editor.getBoundingClientRect());
     const scrollVector = (0,_utilities_dom__WEBPACK_IMPORTED_MODULE_1__.getWindowScrollVector)();
 
     // The range rectangles are tight around the characters; we'd rather fill the line height if possible
-    const cssLineHeight = editor.getLineHeight();
+    const cssLineHeight = this.#editor.getLineHeight();
     const elements = [];
     // render an annotation element for each line separately
-    for (const rect of editor.getRangeRects(this.#indexRange)) {
+    for (const rect of this.#editor.getRangeRects(this.#indexRange)) {
       // suppress when out of bounds
       if (!rect.isContainedBy(editorRect)) continue;
 
@@ -260,19 +278,6 @@ class LintErrorAnnotation {
     }
     this.#portal.replaceChildren(...elements);
     this.#elements = elements;
-  }
-  disconnect() {
-    this.#portal.parentElement?.removeChild(this.#portal);
-  }
-  getTooltipPosition() {
-    const domRect = this.#elements.at(-1)?.getBoundingClientRect();
-    if (domRect) return new _utilities_geometry_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(domRect).asVector("bottom-left").plus((0,_utilities_dom__WEBPACK_IMPORTED_MODULE_1__.getWindowScrollVector)());
-  }
-  containsPoint(point) {
-    return this.#elements.some(el => new _utilities_geometry_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(el.getBoundingClientRect()).contains(point));
-  }
-  containsIndex(index) {
-    return this.#indexRange.contains(index, "start-inclusive-end-exclusive");
   }
 }
 
@@ -389,25 +394,34 @@ class LintedMarkdownEditor {
     this.#statusContainer.style.position = "absolute";
     this.#statusContainer.style.clipPath = "circle(0)";
     portal.appendChild(this.#statusContainer);
-    this.#textarea.addEventListener("input", this.#onRefresh);
-    this.#textarea.addEventListener("focus", this.#onRefresh);
-    this.#textarea.addEventListener("scroll", this.#onRefresh);
+    this.#textarea.addEventListener("input", this.#onUpdate);
+    this.#textarea.addEventListener("focus", this.#onUpdate);
+    this.#textarea.addEventListener("scroll", this.#onReposition);
     this.#textarea.addEventListener("blur", this.#onBlur);
     this.#textarea.addEventListener("mousemove", this.#onMouseMove);
     this.#textarea.addEventListener("mouseleave", this.#onMouseLeave);
-    document.addEventListener("selectionchange", this.#onSelectionChange);
-    this.#resizeObserver = new ResizeObserver(this.#onRefresh);
+
+    // selectionchange can't be bound to the textarea so we have to use the document
+    window.addEventListener("selectionchange", this.#onSelectionChange);
+
+    // annotations are document-relative so we need to observe document resize as well
+    window.addEventListener("resize", this.#onReposition);
+
+    // this does mean it will run twice when the resize causes a resize of the textarea,
+    // but we also need the resize observer for the textarea because it's user resizable
+    this.#resizeObserver = new ResizeObserver(this.#onReposition);
     this.#resizeObserver.observe(textarea);
     this.#characterCoordinatesCalculator = new _utilities_dom_textarea_range__WEBPACK_IMPORTED_MODULE_0__.TextareaRange(textarea);
   }
   disconnect() {
-    this.#textarea.removeEventListener("input", this.#onRefresh);
-    this.#textarea.removeEventListener("focus", this.#onRefresh);
-    this.#textarea.removeEventListener("scroll", this.#onRefresh);
+    this.#textarea.removeEventListener("input", this.#onUpdate);
+    this.#textarea.removeEventListener("focus", this.#onUpdate);
+    this.#textarea.removeEventListener("scroll", this.#onReposition);
     this.#textarea.removeEventListener("blur", this.#onBlur);
     this.#textarea.removeEventListener("mousemove", this.#onMouseMove);
     this.#textarea.removeEventListener("mouseleave", this.#onMouseLeave);
-    document.removeEventListener("selectionchange", this.#onSelectionChange);
+    window.removeEventListener("selectionchange", this.#onSelectionChange);
+    window.removeEventListener("resize", this.#onReposition);
     this.#resizeObserver.disconnect();
     this.#characterCoordinatesCalculator.disconnect();
     this.#annotationsPortal.parentElement?.removeChild(this.#annotationsPortal);
@@ -449,7 +463,8 @@ class LintedMarkdownEditor {
       this.#tooltip.hide();
     }
   }
-  #onRefresh = () => this.#lint();
+  #onUpdate = () => this.#lint();
+  #onReposition = () => this.#recalculateAnnotationPositions();
   #onBlur = () => this.#clear();
   #onMouseMove = event => this.#updatePointerTooltip(new _utilities_geometry_vector__WEBPACK_IMPORTED_MODULE_4__.Vector(event.clientX, event.clientY));
   #onMouseLeave = () => this.#tooltipAnnotation = null;
@@ -469,6 +484,9 @@ class LintedMarkdownEditor {
     if (document.activeElement !== this.#textarea) return;
     const errors = (0,_utilities_lint_markdown__WEBPACK_IMPORTED_MODULE_2__.lintMarkdown)(this.value) ?? [];
     this.#annotations = errors.map(error => new _lint_error_annotation__WEBPACK_IMPORTED_MODULE_3__.LintErrorAnnotation(error, this, this.#annotationsPortal));
+  }
+  #recalculateAnnotationPositions() {
+    for (const annotation of this.#annotations) annotation.recalculatePosition();
   }
   #updatePointerTooltip(pointerLocation) {
     // can't use mouse events on annotations (the easy way) because they have pointer-events: none

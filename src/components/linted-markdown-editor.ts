@@ -39,30 +39,37 @@ export class LintedMarkdownEditor {
     this.#statusContainer.style.clipPath = "circle(0)";
     portal.appendChild(this.#statusContainer);
 
-    this.#textarea.addEventListener("input", this.#onRefresh);
-    this.#textarea.addEventListener("focus", this.#onRefresh);
-    this.#textarea.addEventListener("scroll", this.#onRefresh);
+    this.#textarea.addEventListener("input", this.#onUpdate);
+    this.#textarea.addEventListener("focus", this.#onUpdate);
+    this.#textarea.addEventListener("scroll", this.#onReposition);
     this.#textarea.addEventListener("blur", this.#onBlur);
     this.#textarea.addEventListener("mousemove", this.#onMouseMove);
     this.#textarea.addEventListener("mouseleave", this.#onMouseLeave);
 
-    document.addEventListener("selectionchange", this.#onSelectionChange);
+    // selectionchange can't be bound to the textarea so we have to use the document
+    window.addEventListener("selectionchange", this.#onSelectionChange);
 
-    this.#resizeObserver = new ResizeObserver(this.#onRefresh);
+    // annotations are document-relative so we need to observe document resize as well
+    window.addEventListener("resize", this.#onReposition);
+    
+    // this does mean it will run twice when the resize causes a resize of the textarea,
+    // but we also need the resize observer for the textarea because it's user resizable
+    this.#resizeObserver = new ResizeObserver(this.#onReposition);
     this.#resizeObserver.observe(textarea);
 
     this.#characterCoordinatesCalculator = new TextareaRange(textarea);
   }
 
   disconnect() {
-    this.#textarea.removeEventListener("input", this.#onRefresh);
-    this.#textarea.removeEventListener("focus", this.#onRefresh);
-    this.#textarea.removeEventListener("scroll", this.#onRefresh);
+    this.#textarea.removeEventListener("input", this.#onUpdate);
+    this.#textarea.removeEventListener("focus", this.#onUpdate);
+    this.#textarea.removeEventListener("scroll", this.#onReposition);
     this.#textarea.removeEventListener("blur", this.#onBlur);
     this.#textarea.removeEventListener("mousemove", this.#onMouseMove);
     this.#textarea.removeEventListener("mouseleave", this.#onMouseLeave);
 
-    document.removeEventListener("selectionchange", this.#onSelectionChange);
+    window.removeEventListener("selectionchange", this.#onSelectionChange);
+    window.removeEventListener("resize", this.#onReposition);
 
     this.#resizeObserver.disconnect();
     this.#characterCoordinatesCalculator.disconnect();
@@ -135,7 +142,9 @@ export class LintedMarkdownEditor {
     }
   }
 
-  #onRefresh = () => this.#lint();
+  #onUpdate = () => this.#lint();
+
+  #onReposition = () => this.#recalculateAnnotationPositions();
 
   #onBlur = () => this.#clear();
 
@@ -169,6 +178,10 @@ export class LintedMarkdownEditor {
     this.#annotations = errors.map(
       (error) => new LintErrorAnnotation(error, this, this.#annotationsPortal)
     );
+  }
+
+  #recalculateAnnotationPositions() {
+    for (const annotation of this.#annotations) annotation.recalculatePosition();
   }
 
   #updatePointerTooltip(pointerLocation: Vector) {

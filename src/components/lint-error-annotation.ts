@@ -11,8 +11,9 @@ export class LintErrorAnnotation {
   readonly details: string;
   readonly lineNumber: number;
 
+  readonly #editor: LintedMarkdownEditor;
   readonly #portal: HTMLElement;
-  readonly #elements: readonly HTMLElement[] = [];
+  #elements: readonly HTMLElement[] = [];
 
   readonly #indexRange: NumberRange;
 
@@ -21,6 +22,8 @@ export class LintErrorAnnotation {
     editor: LintedMarkdownEditor,
     portal: HTMLElement
   ) {
+    this.#editor = editor;
+
     this.name = error.ruleNames?.slice(0, 2).join(": ") ?? "";
     this.description = error.ruleDescription ?? "";
     this.details = error.errorDetail ?? "";
@@ -45,15 +48,41 @@ export class LintErrorAnnotation {
     const endIndex = startIndex + length;
     this.#indexRange = new NumberRange(startIndex, endIndex);
 
-    const editorRect = new Rect(editor.getBoundingClientRect());
+    this.recalculatePosition();
+  }
+
+  disconnect() {
+    this.#portal.parentElement?.removeChild(this.#portal);
+  }
+
+  getTooltipPosition() {
+    const domRect = this.#elements.at(-1)?.getBoundingClientRect();
+    if (domRect)
+      return new Rect(domRect)
+        .asVector("bottom-left")
+        .plus(getWindowScrollVector());
+  }
+
+  containsPoint(point: Vector) {
+    return this.#elements.some((el) =>
+      new Rect(el.getBoundingClientRect()).contains(point)
+    );
+  }
+
+  containsIndex(index: number) {
+    return this.#indexRange.contains(index, "start-inclusive-end-exclusive");
+  }
+
+  recalculatePosition() {
+    const editorRect = new Rect(this.#editor.getBoundingClientRect());
     const scrollVector = getWindowScrollVector();
 
     // The range rectangles are tight around the characters; we'd rather fill the line height if possible
-    const cssLineHeight = editor.getLineHeight();
+    const cssLineHeight = this.#editor.getLineHeight();
 
     const elements: HTMLElement[] = [];
     // render an annotation element for each line separately
-    for (const rect of editor.getRangeRects(this.#indexRange)) {
+    for (const rect of this.#editor.getRangeRects(this.#indexRange)) {
       // suppress when out of bounds
       if (!rect.isContainedBy(editorRect)) continue;
 
@@ -80,27 +109,5 @@ export class LintErrorAnnotation {
     }
     this.#portal.replaceChildren(...elements);
     this.#elements = elements;
-  }
-
-  disconnect() {
-    this.#portal.parentElement?.removeChild(this.#portal);
-  }
-
-  getTooltipPosition() {
-    const domRect = this.#elements.at(-1)?.getBoundingClientRect();
-    if (domRect)
-      return new Rect(domRect)
-        .asVector("bottom-left")
-        .plus(getWindowScrollVector());
-  }
-
-  containsPoint(point: Vector) {
-    return this.#elements.some((el) =>
-      new Rect(el.getBoundingClientRect()).contains(point)
-    );
-  }
-
-  containsIndex(index: number) {
-    return this.#indexRange.contains(index, "start-inclusive-end-exclusive");
   }
 }
