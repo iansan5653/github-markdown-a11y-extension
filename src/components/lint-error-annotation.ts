@@ -11,8 +11,9 @@ export class LintErrorAnnotation {
   readonly details: string;
   readonly lineNumber: number;
 
+  readonly #portal: HTMLElement = document.createElement("div");
+
   readonly #editor: LintedMarkdownEditor;
-  readonly #portal: HTMLElement;
   #elements: readonly HTMLElement[] = [];
 
   readonly #indexRange: NumberRange;
@@ -29,7 +30,6 @@ export class LintErrorAnnotation {
     this.details = error.errorDetail ?? "";
     this.lineNumber = error.lineNumber;
 
-    this.#portal = document.createElement("div");
     portal.appendChild(this.#portal);
 
     const markdown = editor.value;
@@ -52,7 +52,7 @@ export class LintErrorAnnotation {
   }
 
   disconnect() {
-    this.#portal.parentElement?.removeChild(this.#portal);
+    this.#portal.remove();
   }
 
   getTooltipPosition() {
@@ -95,19 +95,22 @@ export class LintErrorAnnotation {
       const lineHeight = cssLineHeight ?? rect.height * 1.2;
       const scaledRect = absoluteRect.scaleY(lineHeight / absoluteRect.height);
 
-      const annotation = document.createElement("span");
-      annotation.style.position = "absolute";
-      annotation.style.top = `${scaledRect.top}px`;
-      annotation.style.left = `${scaledRect.left}px`;
-      annotation.style.width = `${scaledRect.width}px`;
-      annotation.style.backgroundColor = "var(--color-danger-emphasis)";
-      annotation.style.opacity = "0.2";
-      // 1.2 seems to be typical default line height
-      annotation.style.height = `${scaledRect.height}px`;
-      annotation.style.pointerEvents = "none";
-      elements.push(annotation);
+      elements.push(LintErrorAnnotation.#createAnnotationElement(scaledRect));
     }
     this.#portal.replaceChildren(...elements);
     this.#elements = elements;
+  }
+
+  static #createAnnotationElement(rect: Rect) {
+    const annotation = document.createElement("span");
+    annotation.style.position = "absolute";
+    annotation.style.backgroundColor = "var(--color-danger-emphasis)";
+    annotation.style.opacity = "0.2";
+    annotation.style.pointerEvents = "none";
+    annotation.style.top = `${rect.top}px`;
+    annotation.style.left = `${rect.left}px`;
+    annotation.style.width = `${rect.width}px`;
+    annotation.style.height = `${rect.height}px`;
+    return annotation;
   }
 }

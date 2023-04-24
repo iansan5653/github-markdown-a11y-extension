@@ -117,7 +117,7 @@ export class TextareaRange {
   }
 
   disconnect() {
-    this.#div.parentElement?.removeChild(this.#div);
+    this.#div.remove();
   }
 
   #refreshStyles() {

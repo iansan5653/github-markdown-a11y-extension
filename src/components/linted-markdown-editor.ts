@@ -12,11 +12,11 @@ import {NumberRange} from "../utilities/geometry/number-range";
 
 export class LintedMarkdownEditor {
   #textarea: HTMLTextAreaElement;
-  #annotationsPortal: HTMLElement;
-  #statusContainer: HTMLElement;
+  #annotationsPortal = document.createElement("div");
+  #statusContainer = LintedMarkdownEditor.#createStatusContainerElement();
+
   #resizeObserver: ResizeObserver;
   #characterCoordinatesCalculator: TextareaRange;
-
   #tooltip: LintErrorTooltip;
 
   #_tooltipAnnotation: LintErrorAnnotation | null = null;
@@ -30,14 +30,7 @@ export class LintedMarkdownEditor {
     this.#textarea = textarea;
     this.#tooltip = tooltip;
 
-    this.#annotationsPortal = document.createElement("div");
-    portal.appendChild(this.#annotationsPortal);
-
-    this.#statusContainer = document.createElement("div");
-    this.#statusContainer.setAttribute("aria-live", "polite");
-    this.#statusContainer.style.position = "absolute";
-    this.#statusContainer.style.clipPath = "circle(0)";
-    portal.appendChild(this.#statusContainer);
+    portal.append(this.#annotationsPortal, this.#statusContainer);
 
     this.#textarea.addEventListener("input", this.#onUpdate);
     this.#textarea.addEventListener("focus", this.#onUpdate);
@@ -51,7 +44,7 @@ export class LintedMarkdownEditor {
 
     // annotations are document-relative so we need to observe document resize as well
     window.addEventListener("resize", this.#onReposition);
-    
+
     // this does mean it will run twice when the resize causes a resize of the textarea,
     // but we also need the resize observer for the textarea because it's user resizable
     this.#resizeObserver = new ResizeObserver(this.#onReposition);
@@ -73,9 +66,10 @@ export class LintedMarkdownEditor {
 
     this.#resizeObserver.disconnect();
     this.#characterCoordinatesCalculator.disconnect();
+    this.#tooltip.disconnect();
 
-    this.#annotationsPortal.parentElement?.removeChild(this.#annotationsPortal);
-    this.#statusContainer.parentElement?.removeChild(this.#statusContainer);
+    this.#annotationsPortal.remove();
+    this.#statusContainer.remove();
   }
 
   /**
@@ -181,7 +175,8 @@ export class LintedMarkdownEditor {
   }
 
   #recalculateAnnotationPositions() {
-    for (const annotation of this.#annotations) annotation.recalculatePosition();
+    for (const annotation of this.#annotations)
+      annotation.recalculatePosition();
   }
 
   #updatePointerTooltip(pointerLocation: Vector) {
@@ -196,5 +191,13 @@ export class LintedMarkdownEditor {
 
     this.#tooltipAnnotation =
       this.#annotations.find((a) => a.containsIndex(caretIndex)) ?? null;
+  }
+
+  static #createStatusContainerElement() {
+    const container = document.createElement("p");
+    container.setAttribute("aria-live", "polite");
+    container.style.position = "absolute";
+    container.style.clipPath = "circle(0)";
+    return container;
   }
 }

@@ -210,8 +210,8 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class LintErrorAnnotation {
+  #portal = document.createElement("div");
   #editor;
-  #portal;
   #elements = [];
   #indexRange;
   constructor(error, editor, portal) {
@@ -220,7 +220,6 @@ class LintErrorAnnotation {
     this.description = error.ruleDescription ?? "";
     this.details = error.errorDetail ?? "";
     this.lineNumber = error.lineNumber;
-    this.#portal = document.createElement("div");
     portal.appendChild(this.#portal);
     const markdown = editor.value;
     const [line = "", ...prevLines] = markdown.split("\n").slice(0, this.lineNumber).reverse();
@@ -232,7 +231,7 @@ class LintErrorAnnotation {
     this.recalculatePosition();
   }
   disconnect() {
-    this.#portal.parentElement?.removeChild(this.#portal);
+    this.#portal.remove();
   }
   getTooltipPosition() {
     const domRect = this.#elements.at(-1)?.getBoundingClientRect();
@@ -264,20 +263,22 @@ class LintErrorAnnotation {
       // expand them to fill the gap around the lines
       const lineHeight = cssLineHeight ?? rect.height * 1.2;
       const scaledRect = absoluteRect.scaleY(lineHeight / absoluteRect.height);
-      const annotation = document.createElement("span");
-      annotation.style.position = "absolute";
-      annotation.style.top = `${scaledRect.top}px`;
-      annotation.style.left = `${scaledRect.left}px`;
-      annotation.style.width = `${scaledRect.width}px`;
-      annotation.style.backgroundColor = "var(--color-danger-emphasis)";
-      annotation.style.opacity = "0.2";
-      // 1.2 seems to be typical default line height
-      annotation.style.height = `${scaledRect.height}px`;
-      annotation.style.pointerEvents = "none";
-      elements.push(annotation);
+      elements.push(LintErrorAnnotation.#createAnnotationElement(scaledRect));
     }
     this.#portal.replaceChildren(...elements);
     this.#elements = elements;
+  }
+  static #createAnnotationElement(rect) {
+    const annotation = document.createElement("span");
+    annotation.style.position = "absolute";
+    annotation.style.backgroundColor = "var(--color-danger-emphasis)";
+    annotation.style.opacity = "0.2";
+    annotation.style.pointerEvents = "none";
+    annotation.style.top = `${rect.top}px`;
+    annotation.style.left = `${rect.left}px`;
+    annotation.style.width = `${rect.width}px`;
+    annotation.style.height = `${rect.height}px`;
+    return annotation;
   }
 }
 
@@ -298,45 +299,27 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class LintErrorTooltip {
-  #tooltip;
+  #description = LintErrorTooltip.#createDescriptionElement();
+  #details = LintErrorTooltip.#createDetailsElement();
+  #name = LintErrorTooltip.#createNameElement();
+  #tooltip = LintErrorTooltip.#createTooltipElement(LintErrorTooltip.#createPrefixElement(), this.#description, this.#details, this.#name);
   constructor() {
-    this.#tooltip = document.createElement("div");
-    this.#tooltip.setAttribute("aria-live", "polite");
-    this.hide();
-    this.#tooltip.style.backgroundColor = "var(--color-canvas-default)";
-    this.#tooltip.style.padding = "8px";
-    this.#tooltip.style.border = "1px solid var(--color-fg-subtle)";
-    this.#tooltip.style.borderRadius = "6px";
-    this.#tooltip.style.boxShadow = "var(--color-shadow-medium)";
-    this.#tooltip.style.position = "absolute";
-    this.#tooltip.style.pointerEvents = "none";
-    this.#tooltip.style.userSelect = "none";
     document.addEventListener("keydown", e => this.#onGlobalKeydown(e));
     document.body.appendChild(this.#tooltip);
+  }
+  disconnect() {
+    document.removeEventListener("keydown", e => this.#onGlobalKeydown(e));
+    this.#tooltip.remove();
   }
   show(nameText, descriptionText, detailsText, {
     x,
     y
   }) {
-    // so screen readers know what the live update means
-    const accessiblePrefix = document.createElement("span");
-    accessiblePrefix.textContent = "Markdown problem: ";
-    accessiblePrefix.style.clipPath = "circle(0)";
-    accessiblePrefix.style.position = "absolute";
-    const description = document.createElement("div");
-    description.textContent = descriptionText;
-    description.style.fontWeight = "bold";
-    description.style.color = "var(--color-danger-fg)";
-    const details = document.createElement("div");
-    details.textContent = detailsText;
-    const name = document.createElement("code");
-    name.textContent = nameText;
-    name.style.fontSize = "12px";
-    name.style.color = "var(--color-fg-muted)";
-    this.#tooltip.replaceChildren(accessiblePrefix, description, details, name);
+    this.#description.textContent = descriptionText;
+    this.#details.textContent = detailsText;
+    this.#name.textContent = nameText;
     this.#tooltip.style.top = `${y}px`;
     this.#tooltip.style.left = `${x}px`;
-    this.#tooltip.style.width = `350px`;
     this.#tooltip.style.maxWidth = `${document.body.clientWidth - x - 16}px`;
     this.#tooltip.removeAttribute("hidden");
   }
@@ -345,6 +328,44 @@ class LintErrorTooltip {
   }
   #onGlobalKeydown(event) {
     if (event.key === "Escape" && !event.defaultPrevented) this.hide();
+  }
+  static #createTooltipElement(...children) {
+    const tooltip = document.createElement("div");
+    tooltip.setAttribute("aria-live", "polite");
+    tooltip.setAttribute("hidden", "true");
+    tooltip.style.backgroundColor = "var(--color-canvas-default)";
+    tooltip.style.padding = "8px";
+    tooltip.style.border = "1px solid var(--color-fg-subtle)";
+    tooltip.style.borderRadius = "6px";
+    tooltip.style.boxShadow = "var(--color-shadow-medium)";
+    tooltip.style.position = "absolute";
+    tooltip.style.pointerEvents = "none";
+    tooltip.style.userSelect = "none";
+    tooltip.style.width = "350px";
+    tooltip.replaceChildren(...children);
+    return tooltip;
+  }
+  static #createPrefixElement() {
+    const prefix = document.createElement("span");
+    prefix.textContent = "Markdown problem: ";
+    prefix.style.clipPath = "circle(0)";
+    prefix.style.position = "absolute";
+    return prefix;
+  }
+  static #createDescriptionElement() {
+    const description = document.createElement("div");
+    description.style.fontWeight = "bold";
+    description.style.color = "var(--color-danger-fg)";
+    return description;
+  }
+  static #createDetailsElement() {
+    return document.createElement("div");
+  }
+  static #createNameElement() {
+    const name = document.createElement("code");
+    name.style.fontSize = "12px";
+    name.style.color = "var(--color-fg-muted)";
+    return name;
   }
 }
 
@@ -377,8 +398,8 @@ __webpack_require__.r(__webpack_exports__);
 
 class LintedMarkdownEditor {
   #textarea;
-  #annotationsPortal;
-  #statusContainer;
+  #annotationsPortal = document.createElement("div");
+  #statusContainer = LintedMarkdownEditor.#createStatusContainerElement();
   #resizeObserver;
   #characterCoordinatesCalculator;
   #tooltip;
@@ -387,13 +408,7 @@ class LintedMarkdownEditor {
   constructor(textarea, portal, tooltip) {
     this.#textarea = textarea;
     this.#tooltip = tooltip;
-    this.#annotationsPortal = document.createElement("div");
-    portal.appendChild(this.#annotationsPortal);
-    this.#statusContainer = document.createElement("div");
-    this.#statusContainer.setAttribute("aria-live", "polite");
-    this.#statusContainer.style.position = "absolute";
-    this.#statusContainer.style.clipPath = "circle(0)";
-    portal.appendChild(this.#statusContainer);
+    portal.append(this.#annotationsPortal, this.#statusContainer);
     this.#textarea.addEventListener("input", this.#onUpdate);
     this.#textarea.addEventListener("focus", this.#onUpdate);
     this.#textarea.addEventListener("scroll", this.#onReposition);
@@ -424,8 +439,9 @@ class LintedMarkdownEditor {
     window.removeEventListener("resize", this.#onReposition);
     this.#resizeObserver.disconnect();
     this.#characterCoordinatesCalculator.disconnect();
-    this.#annotationsPortal.parentElement?.removeChild(this.#annotationsPortal);
-    this.#statusContainer.parentElement?.removeChild(this.#statusContainer);
+    this.#tooltip.disconnect();
+    this.#annotationsPortal.remove();
+    this.#statusContainer.remove();
   }
 
   /**
@@ -496,6 +512,13 @@ class LintedMarkdownEditor {
     if (this.#textarea.selectionEnd !== this.#textarea.selectionStart) return;
     const caretIndex = this.#textarea.selectionStart;
     this.#tooltipAnnotation = this.#annotations.find(a => a.containsIndex(caretIndex)) ?? null;
+  }
+  static #createStatusContainerElement() {
+    const container = document.createElement("p");
+    container.setAttribute("aria-live", "polite");
+    container.style.position = "absolute";
+    container.style.clipPath = "circle(0)";
+    return container;
   }
 }
 
@@ -646,7 +669,7 @@ class TextareaRange {
     return Array.from(this.#range.getClientRects()).map(domRect => new _geometry_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(domRect).translate(netTranslate));
   }
   disconnect() {
-    this.#div.parentElement?.removeChild(this.#div);
+    this.#div.remove();
   }
   #refreshStyles() {
     const style = this.#div.style;
