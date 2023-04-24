@@ -21,7 +21,7 @@ Tip: If you use `git clone` to get the repo and you keep that around after you i
 
 ### Linting rules
 
-Under the hood, the extension is a wrapper around [Markdownlint](https://github.com/markdownlint/markdownlint), providing a web-compatible UI for viewing linting errors. The base set of rules comes from [Markdownlint-github](https://github.com/github/markdownlint-github). In addition, a few of the default rules are also enabled where it was deemed to be useful enough:
+Under the hood, the extension is a wrapper around [Markdownlint](https://github.com/markdownlint/markdownlint), providing a web-compatible UI for viewing linting errors. The base set of rules comes from [Markdownlint-github](https://github.com/github/markdownlint-github). In addition, a few more rules are enabled:
 
 - `heading-increment`: Enforces well-structured headings without skipping levels
 - `no-reversed-links`: Enforces valid link syntax (errors if you accidentally flip the square brackets and parentheses)
