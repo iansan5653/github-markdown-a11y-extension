@@ -1,7 +1,7 @@
 //@ts-check
 "use strict";
 
-import {Vector} from "../utilities/vector";
+import {Vector} from "../utilities/geometry/vector";
 
 export class LintErrorTooltip {
   #tooltip;
@@ -30,7 +30,7 @@ export class LintErrorTooltip {
     nameText: string,
     descriptionText: string,
     detailsText: string,
-    { x, y }: Vector
+    {x, y}: Vector
   ) {
     // so screen readers know what the live update means
     const accessiblePrefix = document.createElement("span");

@@ -2,13 +2,13 @@
 
 "use strict";
 
-import {TextareaRange} from "../utilities/textarea-range";
+import {TextareaRange} from "../utilities/dom/textarea-range";
 import {formatList} from "../utilities/format";
 import {lintMarkdown} from "../utilities/lint-markdown";
 import {LintErrorTooltip} from "./lint-error-tooltip";
 import {LintErrorAnnotation} from "./lint-error-annotation";
-import {Vector} from "../utilities/vector";
-import {NumberRange} from "../utilities/number-range";
+import {Vector} from "../utilities/geometry/vector";
+import {NumberRange} from "../utilities/geometry/number-range";
 
 export class LintedMarkdownEditor {
   #textarea: HTMLTextAreaElement;

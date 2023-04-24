@@ -203,9 +203,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "LintErrorAnnotation": () => (/* binding */ LintErrorAnnotation)
 /* harmony export */ });
-/* harmony import */ var _utilities_rect__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utilities/rect */ "./src/utilities/rect.ts");
-/* harmony import */ var _utilities_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utilities/dom */ "./src/utilities/dom.ts");
-/* harmony import */ var _utilities_number_range__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utilities/number-range */ "./src/utilities/number-range.ts");
+/* harmony import */ var _utilities_geometry_rect__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utilities/geometry/rect */ "./src/utilities/geometry/rect.ts");
+/* harmony import */ var _utilities_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utilities/dom */ "./src/utilities/dom/index.ts");
+/* harmony import */ var _utilities_geometry_number_range__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utilities/geometry/number-range */ "./src/utilities/geometry/number-range.ts");
 
 
 
@@ -226,8 +226,8 @@ class LintErrorAnnotation {
     const length = error.errorRange?.[1] ?? line.length - startCol;
     const startIndex = prevLines.reduce((t, l) => t + l.length + 1 /* +1 for newline char */, startCol);
     const endIndex = startIndex + length;
-    this.#indexRange = new _utilities_number_range__WEBPACK_IMPORTED_MODULE_2__.NumberRange(startIndex, endIndex);
-    const editorRect = new _utilities_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(editor.getBoundingClientRect());
+    this.#indexRange = new _utilities_geometry_number_range__WEBPACK_IMPORTED_MODULE_2__.NumberRange(startIndex, endIndex);
+    const editorRect = new _utilities_geometry_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(editor.getBoundingClientRect());
     const scrollVector = (0,_utilities_dom__WEBPACK_IMPORTED_MODULE_1__.getWindowScrollVector)();
 
     // The range rectangles are tight around the characters; we'd rather fill the line height if possible
@@ -266,10 +266,10 @@ class LintErrorAnnotation {
   }
   getTooltipPosition() {
     const domRect = this.#elements.at(-1)?.getBoundingClientRect();
-    if (domRect) return new _utilities_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(domRect).asVector("bottom-left").plus((0,_utilities_dom__WEBPACK_IMPORTED_MODULE_1__.getWindowScrollVector)());
+    if (domRect) return new _utilities_geometry_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(domRect).asVector("bottom-left").plus((0,_utilities_dom__WEBPACK_IMPORTED_MODULE_1__.getWindowScrollVector)());
   }
   containsPoint(point) {
-    return this.#elements.some(el => new _utilities_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(el.getBoundingClientRect()).contains(point));
+    return this.#elements.some(el => new _utilities_geometry_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(el.getBoundingClientRect()).contains(point));
   }
   containsIndex(index) {
     return this.#indexRange.contains(index, "start-inclusive-end-exclusive");
@@ -356,11 +356,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "LintedMarkdownEditor": () => (/* binding */ LintedMarkdownEditor)
 /* harmony export */ });
-/* harmony import */ var _utilities_textarea_range__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utilities/textarea-range */ "./src/utilities/textarea-range.ts");
+/* harmony import */ var _utilities_dom_textarea_range__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utilities/dom/textarea-range */ "./src/utilities/dom/textarea-range.ts");
 /* harmony import */ var _utilities_format__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utilities/format */ "./src/utilities/format.ts");
 /* harmony import */ var _utilities_lint_markdown__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utilities/lint-markdown */ "./src/utilities/lint-markdown.ts");
 /* harmony import */ var _lint_error_annotation__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./lint-error-annotation */ "./src/components/lint-error-annotation.ts");
-/* harmony import */ var _utilities_vector__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utilities/vector */ "./src/utilities/vector.ts");
+/* harmony import */ var _utilities_geometry_vector__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utilities/geometry/vector */ "./src/utilities/geometry/vector.ts");
 // @ts-check
 
 
@@ -398,7 +398,7 @@ class LintedMarkdownEditor {
     document.addEventListener("selectionchange", this.#onSelectionChange);
     this.#resizeObserver = new ResizeObserver(this.#onRefresh);
     this.#resizeObserver.observe(textarea);
-    this.#characterCoordinatesCalculator = new _utilities_textarea_range__WEBPACK_IMPORTED_MODULE_0__.TextareaRange(textarea);
+    this.#characterCoordinatesCalculator = new _utilities_dom_textarea_range__WEBPACK_IMPORTED_MODULE_0__.TextareaRange(textarea);
   }
   disconnect() {
     this.#textarea.removeEventListener("input", this.#onRefresh);
@@ -451,7 +451,7 @@ class LintedMarkdownEditor {
   }
   #onRefresh = () => this.#lint();
   #onBlur = () => this.#clear();
-  #onMouseMove = event => this.#updatePointerTooltip(new _utilities_vector__WEBPACK_IMPORTED_MODULE_4__.Vector(event.clientX, event.clientY));
+  #onMouseMove = event => this.#updatePointerTooltip(new _utilities_geometry_vector__WEBPACK_IMPORTED_MODULE_4__.Vector(event.clientX, event.clientY));
   #onMouseLeave = () => this.#tooltipAnnotation = null;
   #onSelectionChange = () => {
     // this event only works when applied to the document but we can filter it by detecting focus
@@ -483,10 +483,10 @@ class LintedMarkdownEditor {
 
 /***/ }),
 
-/***/ "./src/utilities/dom.ts":
-/*!******************************!*\
-  !*** ./src/utilities/dom.ts ***!
-  \******************************/
+/***/ "./src/utilities/dom/index.ts":
+/*!************************************!*\
+  !*** ./src/utilities/dom/index.ts ***!
+  \************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -494,107 +494,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "getWindowScrollVector": () => (/* binding */ getWindowScrollVector)
 /* harmony export */ });
-/* harmony import */ var _vector__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./vector */ "./src/utilities/vector.ts");
+/* harmony import */ var _geometry_vector__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../geometry/vector */ "./src/utilities/geometry/vector.ts");
 
-const getWindowScrollVector = () => new _vector__WEBPACK_IMPORTED_MODULE_0__.Vector(window.scrollX, window.scrollY);
-
-/***/ }),
-
-/***/ "./src/utilities/format.ts":
-/*!*********************************!*\
-  !*** ./src/utilities/format.ts ***!
-  \*********************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "formatList": () => (/* binding */ formatList)
-/* harmony export */ });
-const formatList = (items, conjunction) => {
-  if (items.length > 2) {
-    items.push(`${conjunction} ${items.pop()}`);
-    return items.join(", ");
-  } else if (items.length === 2) {
-    const last = items.pop();
-    const secondLast = items.pop();
-    return [secondLast, conjunction, last].join(" ");
-  } else {
-    return items[0];
-  }
-};
+const getWindowScrollVector = () => new _geometry_vector__WEBPACK_IMPORTED_MODULE_0__.Vector(window.scrollX, window.scrollY);
 
 /***/ }),
 
-/***/ "./src/utilities/lint-markdown.ts":
-/*!****************************************!*\
-  !*** ./src/utilities/lint-markdown.ts ***!
-  \****************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "lintMarkdown": () => (/* binding */ lintMarkdown)
-/* harmony export */ });
-/* harmony import */ var markdownlint__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! markdownlint */ "./node_modules/markdownlint/lib/markdownlint.js");
-/* harmony import */ var markdownlint__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(markdownlint__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _github_markdownlint_github__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @github/markdownlint-github */ "./node_modules/@github/markdownlint-github/index.js");
-/* harmony import */ var _github_markdownlint_github__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_github_markdownlint_github__WEBPACK_IMPORTED_MODULE_1__);
-
-
-const lintMarkdown = markdown => markdownlint__WEBPACK_IMPORTED_MODULE_0___default().sync({
-  strings: {
-    content: markdown
-  },
-  config: _github_markdownlint_github__WEBPACK_IMPORTED_MODULE_1___default().init({
-    default: false,
-    "heading-increment": true,
-    "no-reversed-links": true,
-    "no-empty-links": true
-  }),
-  handleRuleFailures: true,
-  customRules: (_github_markdownlint_github__WEBPACK_IMPORTED_MODULE_1___default())
-}).content;
-
-/***/ }),
-
-/***/ "./src/utilities/number-range.ts":
-/*!***************************************!*\
-  !*** ./src/utilities/number-range.ts ***!
-  \***************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "NumberRange": () => (/* binding */ NumberRange)
-/* harmony export */ });
-class NumberRange {
-  constructor(start, end) {
-    this.start = Math.min(start, end);
-    this.end = Math.max(start, end);
-  }
-  contains(value, mode) {
-    switch (mode) {
-      case "inclusive":
-        return value >= this.start && value <= this.end;
-      case "exclusive":
-        return value > this.start && value < this.end;
-      case "start-inclusive-end-exclusive":
-        return value >= this.start && value < this.end;
-      case "start-exclusive-end-inclusive":
-        return value > this.start && value <= this.end;
-    }
-  }
-}
-
-/***/ }),
-
-/***/ "./src/utilities/observe.ts":
-/*!**********************************!*\
-  !*** ./src/utilities/observe.ts ***!
-  \**********************************/
+/***/ "./src/utilities/dom/observe-selector.ts":
+/*!***********************************************!*\
+  !*** ./src/utilities/dom/observe-selector.ts ***!
+  \***********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -628,10 +537,223 @@ function observeSelector(selector, onAdd) {
 
 /***/ }),
 
-/***/ "./src/utilities/rect.ts":
-/*!*******************************!*\
-  !*** ./src/utilities/rect.ts ***!
-  \*******************************/
+/***/ "./src/utilities/dom/textarea-range.ts":
+/*!*********************************************!*\
+  !*** ./src/utilities/dom/textarea-range.ts ***!
+  \*********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "TextareaRange": () => (/* binding */ TextareaRange)
+/* harmony export */ });
+/* harmony import */ var _geometry_rect__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../geometry/rect */ "./src/utilities/geometry/rect.ts");
+/* harmony import */ var _geometry_vector__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../geometry/vector */ "./src/utilities/geometry/vector.ts");
+
+
+
+// Note that some browsers, such as Firefox, do not concatenate properties
+// into their shorthand (e.g. padding-top, padding-bottom etc. -> padding),
+// so we have to list every single property explicitly.
+const propertiesToCopy = ["direction",
+// RTL support
+"boxSizing", "width",
+// on Chrome and IE, exclude the scrollbar, so the mirror div wraps exactly as the textarea does
+"height", "overflowX", "overflowY",
+// copy the scrollbar for IE
+
+"borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth", "borderStyle", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft",
+// https://developer.mozilla.org/en-US/docs/Web/CSS/font
+"fontStyle", "fontVariant", "fontWeight", "fontStretch", "fontSize", "fontSizeAdjust", "lineHeight", "fontFamily", "textAlign", "textTransform", "textIndent", "textDecoration",
+// might not make a difference, but better be safe
+
+"letterSpacing", "wordSpacing", "tabSize", "MozTabSize" // prefixed version for Firefox <= 52
+];
+
+/**
+ * The `Range` API doesn't work well with `textarea` elements, so this creates a duplicate
+ * element and uses that instead. Provides a limited API wrapping around adjusted `Range`
+ * APIs.
+ */
+class TextareaRange {
+  #element;
+  #div;
+  #mutationObserver;
+  #resizeObserver;
+  #range;
+  constructor(target) {
+    this.#element = target;
+
+    // The mirror div will replicate the textarea's style
+    const div = document.createElement("div");
+    this.#div = div;
+    document.body.appendChild(div);
+    this.#refreshStyles();
+    this.#mutationObserver = new MutationObserver(() => this.#refreshStyles());
+    this.#mutationObserver.observe(this.#element, {
+      attributeFilter: ["style"]
+    });
+    this.#resizeObserver = new ResizeObserver(() => this.#refreshStyles());
+    this.#resizeObserver.observe(this.#element);
+    this.#range = document.createRange();
+  }
+
+  /**
+   * Return the viewport-relative client rects of the range. If the range has any line
+   * breaks, this will return multiple rects. Will include the start char and exclude the
+   * end char.
+   */
+  getClientRects({
+    start,
+    end
+  }) {
+    this.#refreshText();
+    const textNode = this.#div.childNodes[0];
+    if (!textNode) return [];
+    this.#range.setStart(textNode, start);
+    this.#range.setEnd(textNode, end);
+
+    // The div is not in the same place as the textarea so we need to subtract the div
+    // position and add the textarea position
+    const divPosition = new _geometry_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(this.#div.getBoundingClientRect()).asVector();
+    const textareaPosition = new _geometry_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(this.#element.getBoundingClientRect()).asVector();
+
+    // The div is not scrollable so it does not have scroll adjustment built in
+    const scrollOffset = new _geometry_vector__WEBPACK_IMPORTED_MODULE_1__.Vector(this.#element.scrollLeft, this.#element.scrollTop);
+    const netTranslate = divPosition.negate().plus(textareaPosition).minus(scrollOffset);
+    return Array.from(this.#range.getClientRects()).map(domRect => new _geometry_rect__WEBPACK_IMPORTED_MODULE_0__.Rect(domRect).translate(netTranslate));
+  }
+  disconnect() {
+    this.#div.parentElement?.removeChild(this.#div);
+  }
+  #refreshStyles() {
+    const style = this.#div.style;
+    const computed = window.getComputedStyle(this.#element);
+
+    // Lineheight is either a number or the string 'normal'. In that case, fall back to a
+    // rough guess of 1.2 based on MDN: "Desktop browsers use a default value of roughly 1.2".
+    const lineHeight = isNaN(parseInt(computed.lineHeight)) ? parseInt(computed.fontSize) * 1.2 : parseInt(computed.lineHeight);
+    const isInput = this.#element instanceof HTMLInputElement;
+
+    // Default wrapping styles
+    style.whiteSpace = isInput ? "nowrap" : "pre-wrap";
+    style.wordWrap = isInput ? "" : "break-word";
+
+    // Position off-screen
+    style.position = "absolute"; // required to return coordinates properly
+
+    const isFirefox = ("mozInnerScreenX" in window);
+
+    // Transfer the element's properties to the div
+    for (const prop of propertiesToCopy) {
+      if (isInput && prop === "lineHeight") {
+        // Special case for <input>s because text is rendered centered and line height may be != height
+        if (computed.boxSizing === "border-box") {
+          const height = parseInt(computed.height);
+          const outerHeight = parseInt(computed.paddingTop) + parseInt(computed.paddingBottom) + parseInt(computed.borderTopWidth) + parseInt(computed.borderBottomWidth);
+          const targetHeight = outerHeight + lineHeight;
+          if (height > targetHeight) {
+            style.lineHeight = `${height - outerHeight}px`;
+          } else if (height === targetHeight) {
+            style.lineHeight = computed.lineHeight;
+          } else {
+            style.lineHeight = "0";
+          }
+        } else {
+          style.lineHeight = computed.height;
+        }
+      } else if (!isInput && prop === "width" && computed.boxSizing === "border-box") {
+        // With box-sizing: border-box we need to offset the size slightly inwards.  This small difference can compound
+        // greatly in long textareas with lots of wrapping, leading to very innacurate results if not accounted for.
+        // Firefox will return computed styles in floats, like `0.9px`, while chromium might return `1px` for the same element.
+        // Either way we use `parseFloat` to turn `0.9px` into `0.9` and `1px` into `1`
+        const totalBorderWidth = parseFloat(computed.borderLeftWidth) + parseFloat(computed.borderRightWidth);
+        // When a vertical scrollbar is present it shrinks the content. We need to account for this by using clientWidth
+        // instead of width in everything but Firefox. When we do that we also have to account for the border width.
+        const width = isFirefox ? parseFloat(computed.width) - totalBorderWidth : this.#element.clientWidth + totalBorderWidth;
+        style.width = `${width}px`;
+      } else {
+        style[prop] = computed[prop];
+      }
+    }
+    if (isFirefox) {
+      // Firefox lies about the overflow property for textareas: https://bugzilla.mozilla.org/show_bug.cgi?id=984275
+      if (this.#element.scrollHeight > parseInt(computed.height)) style.overflowY = "scroll";
+    } else {
+      style.overflow = "hidden"; // for Chrome to not render a scrollbar; IE keeps overflowY = 'scroll'
+    }
+  }
+
+  #refreshText() {
+    this.#div.textContent = this.#element instanceof HTMLInputElement ? this.#element.value.replace(/\s/g, "\u00a0") : this.#element.value;
+  }
+}
+
+/***/ }),
+
+/***/ "./src/utilities/format.ts":
+/*!*********************************!*\
+  !*** ./src/utilities/format.ts ***!
+  \*********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "formatList": () => (/* binding */ formatList)
+/* harmony export */ });
+const formatList = (items, conjunction) => {
+  if (items.length > 2) {
+    items.push(`${conjunction} ${items.pop()}`);
+    return items.join(", ");
+  } else if (items.length === 2) {
+    const last = items.pop();
+    const secondLast = items.pop();
+    return [secondLast, conjunction, last].join(" ");
+  } else {
+    return items[0];
+  }
+};
+
+/***/ }),
+
+/***/ "./src/utilities/geometry/number-range.ts":
+/*!************************************************!*\
+  !*** ./src/utilities/geometry/number-range.ts ***!
+  \************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "NumberRange": () => (/* binding */ NumberRange)
+/* harmony export */ });
+class NumberRange {
+  constructor(start, end) {
+    this.start = Math.min(start, end);
+    this.end = Math.max(start, end);
+  }
+  contains(value, mode) {
+    switch (mode) {
+      case "inclusive":
+        return value >= this.start && value <= this.end;
+      case "exclusive":
+        return value > this.start && value < this.end;
+      case "start-inclusive-end-exclusive":
+        return value >= this.start && value < this.end;
+      case "start-exclusive-end-inclusive":
+        return value > this.start && value <= this.end;
+    }
+  }
+}
+
+/***/ }),
+
+/***/ "./src/utilities/geometry/rect.ts":
+/*!****************************************!*\
+  !*** ./src/utilities/geometry/rect.ts ***!
+  \****************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -639,13 +761,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Rect": () => (/* binding */ Rect)
 /* harmony export */ });
-/* harmony import */ var _number_range__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./number-range */ "./src/utilities/number-range.ts");
-/* harmony import */ var _vector__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./vector */ "./src/utilities/vector.ts");
+/* harmony import */ var _number_range__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./number-range */ "./src/utilities/geometry/number-range.ts");
+/* harmony import */ var _vector__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./vector */ "./src/utilities/geometry/vector.ts");
 
 
-/**
- * Makes `DOMRect` easier to work with.
- */
+/** Represents a rectangle, typically the bounding box for an HTML element. */
 class Rect {
   constructor({
     x,
@@ -737,167 +857,10 @@ class Rect {
 
 /***/ }),
 
-/***/ "./src/utilities/textarea-range.ts":
-/*!*****************************************!*\
-  !*** ./src/utilities/textarea-range.ts ***!
-  \*****************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "TextareaRange": () => (/* binding */ TextareaRange)
-/* harmony export */ });
-/* harmony import */ var _rect__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./rect */ "./src/utilities/rect.ts");
-/* harmony import */ var _vector__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./vector */ "./src/utilities/vector.ts");
-// Note that some browsers, such as Firefox, do not concatenate properties
-// into their shorthand (e.g. padding-top, padding-bottom etc. -> padding),
-
-
-
-
-// so we have to list every single property explicitly.
-const propertiesToCopy = ["direction",
-// RTL support
-"boxSizing", "width",
-// on Chrome and IE, exclude the scrollbar, so the mirror div wraps exactly as the textarea does
-"height", "overflowX", "overflowY",
-// copy the scrollbar for IE
-
-"borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth", "borderStyle", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft",
-// https://developer.mozilla.org/en-US/docs/Web/CSS/font
-"fontStyle", "fontVariant", "fontWeight", "fontStretch", "fontSize", "fontSizeAdjust", "lineHeight", "fontFamily", "textAlign", "textTransform", "textIndent", "textDecoration",
-// might not make a difference, but better be safe
-
-"letterSpacing", "wordSpacing", "tabSize", "MozTabSize" // prefixed version for Firefox <= 52
-];
-
-/**
- * The `Range` API doesn't work well with `textarea` elements, so this creates a duplicate
- * element and uses that instead. Provides a limited API wrapping around adjusted `Range`
- * APIs.
- */
-class TextareaRange {
-  #element;
-  #div;
-  #mutationObserver;
-  #resizeObserver;
-  #range;
-  constructor(target) {
-    this.#element = target;
-
-    // The mirror div will replicate the textarea's style
-    const div = document.createElement("div");
-    this.#div = div;
-    document.body.appendChild(div);
-    this.#refreshStyles();
-    this.#mutationObserver = new MutationObserver(() => this.#refreshStyles());
-    this.#mutationObserver.observe(this.#element, {
-      attributeFilter: ["style"]
-    });
-    this.#resizeObserver = new ResizeObserver(() => this.#refreshStyles());
-    this.#resizeObserver.observe(this.#element);
-    this.#range = document.createRange();
-  }
-
-  /**
-   * Return the viewport-relative client rects of the range. If the range has any line
-   * breaks, this will return multiple rects. Will include the start char and exclude the
-   * end char.
-   */
-  getClientRects({
-    start,
-    end
-  }) {
-    this.#refreshText();
-    const textNode = this.#div.childNodes[0];
-    if (!textNode) return [];
-    this.#range.setStart(textNode, start);
-    this.#range.setEnd(textNode, end);
-
-    // The div is not in the same place as the textarea so we need to subtract the div
-    // position and add the textarea position
-    const divPosition = new _rect__WEBPACK_IMPORTED_MODULE_0__.Rect(this.#div.getBoundingClientRect()).asVector();
-    const textareaPosition = new _rect__WEBPACK_IMPORTED_MODULE_0__.Rect(this.#element.getBoundingClientRect()).asVector();
-
-    // The div is not scrollable so it does not have scroll adjustment built in
-    const scrollOffset = new _vector__WEBPACK_IMPORTED_MODULE_1__.Vector(this.#element.scrollLeft, this.#element.scrollTop);
-    const netTranslate = divPosition.negate().plus(textareaPosition).minus(scrollOffset);
-    return Array.from(this.#range.getClientRects()).map(domRect => new _rect__WEBPACK_IMPORTED_MODULE_0__.Rect(domRect).translate(netTranslate));
-  }
-  disconnect() {
-    this.#div.parentElement?.removeChild(this.#div);
-  }
-  #refreshStyles() {
-    console.log("refresh");
-    const style = this.#div.style;
-    const computed = window.getComputedStyle(this.#element);
-
-    // Lineheight is either a number or the string 'normal'. In that case, fall back to a
-    // rough guess of 1.2 based on MDN: "Desktop browsers use a default value of roughly 1.2".
-    const lineHeight = isNaN(parseInt(computed.lineHeight)) ? parseInt(computed.fontSize) * 1.2 : parseInt(computed.lineHeight);
-    const isInput = this.#element instanceof HTMLInputElement;
-
-    // Default wrapping styles
-    style.whiteSpace = isInput ? "nowrap" : "pre-wrap";
-    style.wordWrap = isInput ? "" : "break-word";
-
-    // Position off-screen
-    style.position = "absolute"; // required to return coordinates properly
-
-    const isFirefox = ("mozInnerScreenX" in window);
-
-    // Transfer the element's properties to the div
-    for (const prop of propertiesToCopy) {
-      if (isInput && prop === "lineHeight") {
-        // Special case for <input>s because text is rendered centered and line height may be != height
-        if (computed.boxSizing === "border-box") {
-          const height = parseInt(computed.height);
-          const outerHeight = parseInt(computed.paddingTop) + parseInt(computed.paddingBottom) + parseInt(computed.borderTopWidth) + parseInt(computed.borderBottomWidth);
-          const targetHeight = outerHeight + lineHeight;
-          if (height > targetHeight) {
-            style.lineHeight = `${height - outerHeight}px`;
-          } else if (height === targetHeight) {
-            style.lineHeight = computed.lineHeight;
-          } else {
-            style.lineHeight = "0";
-          }
-        } else {
-          style.lineHeight = computed.height;
-        }
-      } else if (!isInput && prop === "width" && computed.boxSizing === "border-box") {
-        // With box-sizing: border-box we need to offset the size slightly inwards.  This small difference can compound
-        // greatly in long textareas with lots of wrapping, leading to very innacurate results if not accounted for.
-        // Firefox will return computed styles in floats, like `0.9px`, while chromium might return `1px` for the same element.
-        // Either way we use `parseFloat` to turn `0.9px` into `0.9` and `1px` into `1`
-        const totalBorderWidth = parseFloat(computed.borderLeftWidth) + parseFloat(computed.borderRightWidth);
-        // When a vertical scrollbar is present it shrinks the content. We need to account for this by using clientWidth
-        // instead of width in everything but Firefox. When we do that we also have to account for the border width.
-        const width = isFirefox ? parseFloat(computed.width) - totalBorderWidth : this.#element.clientWidth + totalBorderWidth;
-        style.width = `${width}px`;
-      } else {
-        style[prop] = computed[prop];
-      }
-    }
-    if (isFirefox) {
-      // Firefox lies about the overflow property for textareas: https://bugzilla.mozilla.org/show_bug.cgi?id=984275
-      if (this.#element.scrollHeight > parseInt(computed.height)) style.overflowY = "scroll";
-    } else {
-      style.overflow = "hidden"; // for Chrome to not render a scrollbar; IE keeps overflowY = 'scroll'
-    }
-  }
-
-  #refreshText() {
-    this.#div.textContent = this.#element instanceof HTMLInputElement ? this.#element.value.replace(/\s/g, "\u00a0") : this.#element.value;
-  }
-}
-
-/***/ }),
-
-/***/ "./src/utilities/vector.ts":
-/*!*********************************!*\
-  !*** ./src/utilities/vector.ts ***!
-  \*********************************/
+/***/ "./src/utilities/geometry/vector.ts":
+/*!******************************************!*\
+  !*** ./src/utilities/geometry/vector.ts ***!
+  \******************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -905,6 +868,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Vector": () => (/* binding */ Vector)
 /* harmony export */ });
+/** Represents a 2D vector or point. */
 class Vector {
   constructor(x, y) {
     this.x = x;
@@ -920,6 +884,39 @@ class Vector {
     return new Vector(-this.x, -this.y);
   }
 }
+
+/***/ }),
+
+/***/ "./src/utilities/lint-markdown.ts":
+/*!****************************************!*\
+  !*** ./src/utilities/lint-markdown.ts ***!
+  \****************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "lintMarkdown": () => (/* binding */ lintMarkdown)
+/* harmony export */ });
+/* harmony import */ var markdownlint__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! markdownlint */ "./node_modules/markdownlint/lib/markdownlint.js");
+/* harmony import */ var markdownlint__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(markdownlint__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _github_markdownlint_github__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @github/markdownlint-github */ "./node_modules/@github/markdownlint-github/index.js");
+/* harmony import */ var _github_markdownlint_github__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_github_markdownlint_github__WEBPACK_IMPORTED_MODULE_1__);
+
+
+const lintMarkdown = markdown => markdownlint__WEBPACK_IMPORTED_MODULE_0___default().sync({
+  strings: {
+    content: markdown
+  },
+  config: _github_markdownlint_github__WEBPACK_IMPORTED_MODULE_1___default().init({
+    default: false,
+    "heading-increment": true,
+    "no-reversed-links": true,
+    "no-empty-links": true
+  }),
+  handleRuleFailures: true,
+  customRules: (_github_markdownlint_github__WEBPACK_IMPORTED_MODULE_1___default())
+}).content;
 
 /***/ }),
 
@@ -33472,7 +33469,7 @@ var __webpack_exports__ = {};
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _components_lint_error_tooltip__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./components/lint-error-tooltip */ "./src/components/lint-error-tooltip.ts");
 /* harmony import */ var _components_linted_markdown_editor__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/linted-markdown-editor */ "./src/components/linted-markdown-editor.ts");
-/* harmony import */ var _utilities_observe__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utilities/observe */ "./src/utilities/observe.ts");
+/* harmony import */ var _utilities_dom_observe_selector__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utilities/dom/observe-selector */ "./src/utilities/dom/observe-selector.ts");
 // @ts-check
 
 
@@ -33484,7 +33481,7 @@ const rootPortal = document.createElement("div");
 document.body.appendChild(rootPortal);
 const tooltip = new _components_lint_error_tooltip__WEBPACK_IMPORTED_MODULE_0__.LintErrorTooltip();
 const markdownEditorsSelector = "textarea.js-paste-markdown, textarea.CommentBox-input, textarea[aria-label='Markdown value']";
-(0,_utilities_observe__WEBPACK_IMPORTED_MODULE_2__.observeSelector)(markdownEditorsSelector, editor => {
+(0,_utilities_dom_observe_selector__WEBPACK_IMPORTED_MODULE_2__.observeSelector)(markdownEditorsSelector, editor => {
   const {
     height,
     width

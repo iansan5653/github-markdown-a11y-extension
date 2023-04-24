@@ -7,5 +7,6 @@
       "matches": ["https://*.github.com/*"],
       "js": ["dist/content-script.js"]
     }
-  ]
+  ],
+  "host_permissions": ["https://*.github.com/*"]
 }

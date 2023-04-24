@@ -1,10 +1,9 @@
+import {NumberRange} from "../geometry/number-range";
+import {Rect} from "../geometry/rect";
+import {Vector} from "../geometry/vector";
+
 // Note that some browsers, such as Firefox, do not concatenate properties
 // into their shorthand (e.g. padding-top, padding-bottom etc. -> padding),
-
-import {NumberRange} from "./number-range";
-import {Rect} from "./rect";
-import {Vector} from "./vector";
-
 // so we have to list every single property explicitly.
 const propertiesToCopy = [
   "direction", // RTL support
@@ -122,7 +121,6 @@ export class TextareaRange {
   }
 
   #refreshStyles() {
-    console.log("refresh");
     const style = this.#div.style;
     const computed = window.getComputedStyle(this.#element);
 

@@ -1,9 +1,9 @@
 import {LintError} from "markdownlint";
 import {LintedMarkdownEditor} from "./linted-markdown-editor";
-import {Rect} from "../utilities/rect";
-import {Vector} from "../utilities/vector";
+import {Rect} from "../utilities/geometry/rect";
+import {Vector} from "../utilities/geometry/vector";
 import {getWindowScrollVector} from "../utilities/dom";
-import {NumberRange} from "../utilities/number-range";
+import {NumberRange} from "../utilities/geometry/number-range";
 
 export class LintErrorAnnotation {
   readonly name: string;

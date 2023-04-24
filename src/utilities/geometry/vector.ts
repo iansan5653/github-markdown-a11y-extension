@@ -1,3 +1,4 @@
+/** Represents a 2D vector or point. */
 export class Vector {
   constructor(readonly x: number, readonly y: number) {}
 

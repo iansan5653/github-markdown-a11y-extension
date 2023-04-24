@@ -3,9 +3,7 @@ import {Vector} from "./vector";
 
 type RectParams = Pick<DOMRect, "x" | "y" | "height" | "width">;
 
-/**
- * Makes `DOMRect` easier to work with.
- */
+/** Represents a rectangle, typically the bounding box for an HTML element. */
 export class Rect implements DOMRect {
   readonly height: number;
   readonly width: number;
