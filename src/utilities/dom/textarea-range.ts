@@ -137,7 +137,9 @@ export class TextareaRange {
     style.wordWrap = isInput ? "" : "break-word";
 
     // Position off-screen
-    style.position = "absolute"; // required to return coordinates properly
+    style.position = "fixed";
+    style.top = "0";
+    style.transform = "translateY(-100%)";
 
     const isFirefox = "mozInnerScreenX" in window;
 

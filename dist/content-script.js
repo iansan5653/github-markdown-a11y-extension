@@ -515,21 +515,24 @@ __webpack_require__.r(__webpack_exports__);
  * Watch the document DOM for the selector.
  */
 function observeSelector(selector, onAdd) {
-  const parent = document.body;
-  let removeHandlers = new Map();
-  for (const element of parent.querySelectorAll(selector)) if (element instanceof HTMLElement) removeHandlers.set(element, onAdd(element));
+  const removeHandlers = new Map();
+  for (const element of document.querySelectorAll(selector)) if (element instanceof HTMLElement) removeHandlers.set(element, onAdd(element));
   const observer = new MutationObserver(() => {
     const found = new Set();
-    for (const element of parent.querySelectorAll(selector)) if (element instanceof HTMLElement) {
+
+    // handle new elements
+    for (const element of document.querySelectorAll(selector)) if (element instanceof HTMLElement) {
       found.add(element);
       if (!removeHandlers.has(element)) removeHandlers.set(element, onAdd(element));
     }
+
+    // handle removed elements
     for (const [element, onRemove] of removeHandlers.entries()) if (!found.has(element)) {
       onRemove();
       removeHandlers.delete(element);
     }
   });
-  observer.observe(parent, {
+  observer.observe(document, {
     childList: true,
     subtree: true
   });
@@ -641,8 +644,9 @@ class TextareaRange {
     style.wordWrap = isInput ? "" : "break-word";
 
     // Position off-screen
-    style.position = "absolute"; // required to return coordinates properly
-
+    style.position = "fixed";
+    style.top = "0";
+    style.transform = "translateY(-100%)";
     const isFirefox = ("mozInnerScreenX" in window);
 
     // Transfer the element's properties to the div

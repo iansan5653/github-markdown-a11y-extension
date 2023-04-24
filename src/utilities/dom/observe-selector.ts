@@ -5,17 +5,17 @@ export function observeSelector(
   selector: string,
   onAdd: (element: HTMLElement) => () => void
 ) {
-  const parent = document.body;
+  const removeHandlers = new Map<HTMLElement, () => void>();
 
-  let removeHandlers = new Map();
-
-  for (const element of parent.querySelectorAll(selector))
+  for (const element of document.querySelectorAll(selector))
     if (element instanceof HTMLElement)
       removeHandlers.set(element, onAdd(element));
 
   const observer = new MutationObserver(() => {
-    const found = new Set();
-    for (const element of parent.querySelectorAll(selector))
+    const found = new Set<HTMLElement>();
+
+    // handle new elements
+    for (const element of document.querySelectorAll(selector))
       if (element instanceof HTMLElement) {
         found.add(element);
 
@@ -23,6 +23,7 @@ export function observeSelector(
           removeHandlers.set(element, onAdd(element));
       }
 
+    // handle removed elements
     for (const [element, onRemove] of removeHandlers.entries())
       if (!found.has(element)) {
         onRemove();
@@ -30,7 +31,7 @@ export function observeSelector(
       }
   });
 
-  observer.observe(parent, {
+  observer.observe(document, {
     childList: true,
     subtree: true,
   });
