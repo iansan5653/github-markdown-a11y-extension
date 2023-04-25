@@ -33534,12 +33534,7 @@ const rootPortal = document.createElement("div");
 document.body.appendChild(rootPortal);
 const markdownEditorsSelector = "textarea.js-paste-markdown, textarea.CommentBox-input, textarea[aria-label='Markdown value']";
 (0,_utilities_dom_observe_selector__WEBPACK_IMPORTED_MODULE_1__.observeSelector)(markdownEditorsSelector, editor => {
-  const {
-    height,
-    width
-  } = editor.getBoundingClientRect();
-  // ignore hidden inputs
-  if (!(editor instanceof HTMLTextAreaElement) || height < 5 || width < 5) return () => {};
+  if (!(editor instanceof HTMLTextAreaElement)) return () => {};
   const lintedEditor = new _components_linted_markdown_editor__WEBPACK_IMPORTED_MODULE_0__.LintedMarkdownEditor(editor, rootPortal);
   return () => lintedEditor.disconnect();
 });
