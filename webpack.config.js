@@ -3,7 +3,8 @@
 "use strict";
 
 const webpack = require("webpack");
-const {name} = require("./package.json");
+const {name} = require("./manifest.json");
+const safeName = name.replace(/\s/g, "_");
 
 const nodeModulePrefixRe = /^node:/u;
 
@@ -26,11 +27,11 @@ module.exports = [
         },
       ],
     },
-    name,
+    name: safeName,
     output: {
       filename: "dist/content-script.js",
       library: {
-        name: name.replace(/(-\w)/g, (m) => m.slice(1).toUpperCase()),
+        name: safeName.replace(/(-\w)/g, (m) => m.slice(1).toUpperCase()),
         type: "var",
       },
       path: __dirname,

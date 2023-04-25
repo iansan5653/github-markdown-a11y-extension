@@ -1,4 +1,4 @@
-var mdA11yCheckerForGithub;
+var Accessibility_Checker_for_GitHub_Markdown;
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -33545,6 +33545,6 @@ const markdownEditorsSelector = "textarea.js-paste-markdown, textarea.CommentBox
 });
 })();
 
-mdA11yCheckerForGithub = __webpack_exports__;
+Accessibility_Checker_for_GitHub_Markdown = __webpack_exports__;
 /******/ })()
 ;
