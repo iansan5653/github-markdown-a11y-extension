@@ -9,8 +9,6 @@ import {observeSelector} from "./utilities/dom/observe-selector";
 const rootPortal = document.createElement("div");
 document.body.appendChild(rootPortal);
 
-const tooltip = new LintErrorTooltip();
-
 const markdownEditorsSelector =
   "textarea.js-paste-markdown, textarea.CommentBox-input, textarea[aria-label='Markdown value']";
 
@@ -20,7 +18,7 @@ observeSelector(markdownEditorsSelector, (editor) => {
   if (!(editor instanceof HTMLTextAreaElement) || height < 5 || width < 5)
     return () => {};
 
-  const lintedEditor = new LintedMarkdownEditor(editor, rootPortal, tooltip);
+  const lintedEditor = new LintedMarkdownEditor(editor, rootPortal);
 
   return () => lintedEditor.disconnect();
 });

@@ -421,9 +421,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utilities_dom_textarea_range__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utilities/dom/textarea-range */ "./src/utilities/dom/textarea-range.ts");
 /* harmony import */ var _utilities_format__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utilities/format */ "./src/utilities/format.ts");
 /* harmony import */ var _utilities_lint_markdown__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utilities/lint-markdown */ "./src/utilities/lint-markdown.ts");
-/* harmony import */ var _lint_error_annotation__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./lint-error-annotation */ "./src/components/lint-error-annotation.ts");
-/* harmony import */ var _utilities_geometry_vector__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utilities/geometry/vector */ "./src/utilities/geometry/vector.ts");
-/* harmony import */ var _component__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./component */ "./src/components/component.ts");
+/* harmony import */ var _lint_error_tooltip__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./lint-error-tooltip */ "./src/components/lint-error-tooltip.ts");
+/* harmony import */ var _lint_error_annotation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./lint-error-annotation */ "./src/components/lint-error-annotation.ts");
+/* harmony import */ var _utilities_geometry_vector__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utilities/geometry/vector */ "./src/utilities/geometry/vector.ts");
+/* harmony import */ var _component__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./component */ "./src/components/component.ts");
 // @ts-check
 
 
@@ -434,19 +435,17 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-class LintedMarkdownEditor extends _component__WEBPACK_IMPORTED_MODULE_5__.Component {
+
+class LintedMarkdownEditor extends _component__WEBPACK_IMPORTED_MODULE_6__.Component {
   #textarea;
-  #tooltip;
-  #annotationsPortal = document.createElement("div");
-  #statusContainer = LintedMarkdownEditor.#createStatusContainerElement();
+  #tooltip = new _lint_error_tooltip__WEBPACK_IMPORTED_MODULE_3__.LintErrorTooltip();
   #resizeObserver;
   #characterCoordinatesCalculator;
-  #_tooltipAnnotation = null;
-  #_annotations = [];
-  constructor(textarea, portal, tooltip) {
+  #annotationsPortal = document.createElement("div");
+  #statusContainer = LintedMarkdownEditor.#createStatusContainerElement();
+  constructor(textarea, portal) {
     super();
     this.#textarea = textarea;
-    this.#tooltip = tooltip;
     portal.append(this.#annotationsPortal, this.#statusContainer);
     this.addEventListener(textarea, "input", this.#onUpdate);
     this.addEventListener(textarea, "focus", this.#onUpdate);
@@ -493,6 +492,7 @@ class LintedMarkdownEditor extends _component__WEBPACK_IMPORTED_MODULE_5__.Compo
   get value() {
     return this.#textarea.value;
   }
+  #_annotations = [];
   set #annotations(annotations) {
     if (annotations === this.#_annotations) return;
     this.#_annotations = annotations;
@@ -501,6 +501,7 @@ class LintedMarkdownEditor extends _component__WEBPACK_IMPORTED_MODULE_5__.Compo
   get #annotations() {
     return this.#_annotations;
   }
+  #_tooltipAnnotation = null;
   set #tooltipAnnotation(annotation) {
     if (annotation === this.#_tooltipAnnotation) return;
     this.#_tooltipAnnotation = annotation;
@@ -514,7 +515,7 @@ class LintedMarkdownEditor extends _component__WEBPACK_IMPORTED_MODULE_5__.Compo
   #onUpdate = () => this.#lint();
   #onReposition = () => this.#recalculateAnnotationPositions();
   #onBlur = () => this.#clear();
-  #onMouseMove = event => this.#updatePointerTooltip(new _utilities_geometry_vector__WEBPACK_IMPORTED_MODULE_4__.Vector(event.clientX, event.clientY));
+  #onMouseMove = event => this.#updatePointerTooltip(new _utilities_geometry_vector__WEBPACK_IMPORTED_MODULE_5__.Vector(event.clientX, event.clientY));
   #onMouseLeave = () => this.#tooltipAnnotation = null;
   #onSelectionChange = () => {
     // this event only works when applied to the document but we can filter it by detecting focus
@@ -531,7 +532,7 @@ class LintedMarkdownEditor extends _component__WEBPACK_IMPORTED_MODULE_5__.Compo
     this.#clear();
     if (document.activeElement !== this.#textarea) return;
     const errors = (0,_utilities_lint_markdown__WEBPACK_IMPORTED_MODULE_2__.lintMarkdown)(this.value) ?? [];
-    this.#annotations = errors.map(error => new _lint_error_annotation__WEBPACK_IMPORTED_MODULE_3__.LintErrorAnnotation(error, this, this.#annotationsPortal));
+    this.#annotations = errors.map(error => new _lint_error_annotation__WEBPACK_IMPORTED_MODULE_4__.LintErrorAnnotation(error, this, this.#annotationsPortal));
   }
   #recalculateAnnotationPositions() {
     for (const annotation of this.#annotations) annotation.recalculatePosition();
@@ -33521,11 +33522,9 @@ var __webpack_exports__ = {};
   !*** ./src/content-script.ts ***!
   \*******************************/
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _components_lint_error_tooltip__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./components/lint-error-tooltip */ "./src/components/lint-error-tooltip.ts");
-/* harmony import */ var _components_linted_markdown_editor__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/linted-markdown-editor */ "./src/components/linted-markdown-editor.ts");
-/* harmony import */ var _utilities_dom_observe_selector__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utilities/dom/observe-selector */ "./src/utilities/dom/observe-selector.ts");
+/* harmony import */ var _components_linted_markdown_editor__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./components/linted-markdown-editor */ "./src/components/linted-markdown-editor.ts");
+/* harmony import */ var _utilities_dom_observe_selector__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utilities/dom/observe-selector */ "./src/utilities/dom/observe-selector.ts");
 // @ts-check
-
 
 
 
@@ -33533,16 +33532,15 @@ __webpack_require__.r(__webpack_exports__);
 
 const rootPortal = document.createElement("div");
 document.body.appendChild(rootPortal);
-const tooltip = new _components_lint_error_tooltip__WEBPACK_IMPORTED_MODULE_0__.LintErrorTooltip();
 const markdownEditorsSelector = "textarea.js-paste-markdown, textarea.CommentBox-input, textarea[aria-label='Markdown value']";
-(0,_utilities_dom_observe_selector__WEBPACK_IMPORTED_MODULE_2__.observeSelector)(markdownEditorsSelector, editor => {
+(0,_utilities_dom_observe_selector__WEBPACK_IMPORTED_MODULE_1__.observeSelector)(markdownEditorsSelector, editor => {
   const {
     height,
     width
   } = editor.getBoundingClientRect();
   // ignore hidden inputs
   if (!(editor instanceof HTMLTextAreaElement) || height < 5 || width < 5) return () => {};
-  const lintedEditor = new _components_linted_markdown_editor__WEBPACK_IMPORTED_MODULE_1__.LintedMarkdownEditor(editor, rootPortal, tooltip);
+  const lintedEditor = new _components_linted_markdown_editor__WEBPACK_IMPORTED_MODULE_0__.LintedMarkdownEditor(editor, rootPortal);
   return () => lintedEditor.disconnect();
 });
 })();

@@ -13,26 +13,17 @@ import {Component} from "./component";
 
 export class LintedMarkdownEditor extends Component {
   #textarea: HTMLTextAreaElement;
-  #tooltip: LintErrorTooltip;
+  #tooltip: LintErrorTooltip = new LintErrorTooltip();
+  #resizeObserver: ResizeObserver;
+  #characterCoordinatesCalculator: TextareaRange;
 
   #annotationsPortal = document.createElement("div");
   #statusContainer = LintedMarkdownEditor.#createStatusContainerElement();
 
-  #resizeObserver: ResizeObserver;
-  #characterCoordinatesCalculator: TextareaRange;
-
-  #_tooltipAnnotation: LintErrorAnnotation | null = null;
-  #_annotations: readonly LintErrorAnnotation[] = [];
-
-  constructor(
-    textarea: HTMLTextAreaElement,
-    portal: HTMLElement,
-    tooltip: LintErrorTooltip
-  ) {
+  constructor(textarea: HTMLTextAreaElement, portal: HTMLElement) {
     super();
 
     this.#textarea = textarea;
-    this.#tooltip = tooltip;
 
     portal.append(this.#annotationsPortal, this.#statusContainer);
 
@@ -91,6 +82,8 @@ export class LintedMarkdownEditor extends Component {
     return this.#textarea.value;
   }
 
+  #_annotations: readonly LintErrorAnnotation[] = [];
+
   set #annotations(annotations: ReadonlyArray<LintErrorAnnotation>) {
     if (annotations === this.#_annotations) return;
 
@@ -112,6 +105,8 @@ export class LintedMarkdownEditor extends Component {
   get #annotations() {
     return this.#_annotations;
   }
+
+  #_tooltipAnnotation: LintErrorAnnotation | null = null;
 
   set #tooltipAnnotation(annotation: LintErrorAnnotation | null) {
     if (annotation === this.#_tooltipAnnotation) return;
