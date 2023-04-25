@@ -1,10 +1,10 @@
-import {LintError} from "markdownlint";
-import {LintedMarkdownEditor} from "./linted-markdown-editor";
-import {Rect} from "../utilities/geometry/rect";
-import {Vector} from "../utilities/geometry/vector";
-import {getWindowScrollVector} from "../utilities/dom";
-import {NumberRange} from "../utilities/geometry/number-range";
-import {Component} from "./component";
+import { LintError } from "markdownlint";
+import { LintedMarkdownEditor } from "./linted-markdown-editor";
+import { Rect } from "../utilities/geometry/rect";
+import { Vector } from "../utilities/geometry/vector";
+import { getWindowScrollVector } from "../utilities/dom";
+import { NumberRange } from "../utilities/geometry/number-range";
+import { Component } from "./component";
 
 export class LintErrorAnnotation extends Component {
   readonly name: string;

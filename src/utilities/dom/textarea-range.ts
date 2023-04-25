@@ -1,6 +1,6 @@
-import {NumberRange} from "../geometry/number-range";
-import {Rect} from "../geometry/rect";
-import {Vector} from "../geometry/vector";
+import { NumberRange } from "../geometry/number-range";
+import { Rect } from "../geometry/rect";
+import { Vector } from "../geometry/vector";
 
 // Note that some browsers, such as Firefox, do not concatenate properties
 // into their shorthand (e.g. padding-top, padding-bottom etc. -> padding),
@@ -84,7 +84,7 @@ export class TextareaRange {
    * breaks, this will return multiple rects. Will include the start char and exclude the
    * end char.
    */
-  getClientRects({start, end}: NumberRange) {
+  getClientRects({ start, end }: NumberRange) {
     this.#refreshText();
 
     const textNode = this.#div.childNodes[0];

@@ -1,5 +1,5 @@
-import {NumberRange} from "./number-range";
-import {Vector} from "./vector";
+import { NumberRange } from "./number-range";
+import { Vector } from "./vector";
 
 type RectParams = Pick<DOMRect, "x" | "y" | "height" | "width">;
 
@@ -10,7 +10,7 @@ export class Rect implements DOMRect {
   readonly x: number;
   readonly y: number;
 
-  constructor({x, y, height, width}: RectParams) {
+  constructor({ x, y, height, width }: RectParams) {
     this.x = x;
     this.y = y;
     this.height = height;
@@ -23,7 +23,7 @@ export class Rect implements DOMRect {
     height = this.height,
     width = this.width,
   }: Partial<RectParams>) {
-    return new Rect({x, y, height, width});
+    return new Rect({ x, y, height, width });
   }
 
   toJSON() {
@@ -106,6 +106,6 @@ export class Rect implements DOMRect {
   scaleY(factor: number) {
     const scaledHeight = this.height * factor;
     const deltaY = (this.height - scaledHeight) / 2;
-    return this.translate(new Vector(0, deltaY)).copy({height: scaledHeight});
+    return this.translate(new Vector(0, deltaY)).copy({ height: scaledHeight });
   }
 }

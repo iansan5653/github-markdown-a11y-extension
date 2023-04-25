@@ -1,8 +1,8 @@
 //@ts-check
 "use strict";
 
-import {Vector} from "../utilities/geometry/vector";
-import {Component} from "./component";
+import { Vector } from "../utilities/geometry/vector";
+import { Component } from "./component";
 
 export class LintErrorTooltip extends Component {
   #description = LintErrorTooltip.#createDescriptionElement();
@@ -31,7 +31,7 @@ export class LintErrorTooltip extends Component {
     nameText: string,
     descriptionText: string,
     detailsText: string,
-    {x, y}: Vector
+    { x, y }: Vector
   ) {
     this.#description.textContent = descriptionText;
     this.#details.textContent = detailsText;
