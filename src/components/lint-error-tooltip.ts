@@ -2,8 +2,9 @@
 "use strict";
 
 import {Vector} from "../utilities/geometry/vector";
+import {Component} from "./component";
 
-export class LintErrorTooltip {
+export class LintErrorTooltip extends Component {
   #description = LintErrorTooltip.#createDescriptionElement();
   #details = LintErrorTooltip.#createDetailsElement();
   #name = LintErrorTooltip.#createNameElement();
@@ -16,12 +17,13 @@ export class LintErrorTooltip {
   );
 
   constructor() {
-    document.addEventListener("keydown", (e) => this.#onGlobalKeydown(e));
+    super();
+    this.addEventListener(document, "keydown", (e) => this.#onGlobalKeydown(e));
     document.body.appendChild(this.#tooltip);
   }
 
   disconnect() {
-    document.removeEventListener("keydown", (e) => this.#onGlobalKeydown(e));
+    super.disconnect();
     this.#tooltip.remove();
   }
 

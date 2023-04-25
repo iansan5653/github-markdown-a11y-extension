@@ -4,14 +4,15 @@ import {Rect} from "../utilities/geometry/rect";
 import {Vector} from "../utilities/geometry/vector";
 import {getWindowScrollVector} from "../utilities/dom";
 import {NumberRange} from "../utilities/geometry/number-range";
+import {Component} from "./component";
 
-export class LintErrorAnnotation {
+export class LintErrorAnnotation extends Component {
   readonly name: string;
   readonly description: string;
   readonly details: string;
   readonly lineNumber: number;
 
-  readonly #portal: HTMLElement = document.createElement("div");
+  readonly #container: HTMLElement = document.createElement("div");
 
   readonly #editor: LintedMarkdownEditor;
   #elements: readonly HTMLElement[] = [];
@@ -23,6 +24,8 @@ export class LintErrorAnnotation {
     editor: LintedMarkdownEditor,
     portal: HTMLElement
   ) {
+    super();
+
     this.#editor = editor;
 
     this.name = error.ruleNames?.slice(0, 2).join(": ") ?? "";
@@ -30,7 +33,7 @@ export class LintErrorAnnotation {
     this.details = error.errorDetail ?? "";
     this.lineNumber = error.lineNumber;
 
-    portal.appendChild(this.#portal);
+    portal.appendChild(this.#container);
 
     const markdown = editor.value;
     const [line = "", ...prevLines] = markdown
@@ -52,7 +55,8 @@ export class LintErrorAnnotation {
   }
 
   disconnect() {
-    this.#portal.remove();
+    super.disconnect();
+    this.#container.remove();
   }
 
   getTooltipPosition() {
@@ -97,7 +101,7 @@ export class LintErrorAnnotation {
 
       elements.push(LintErrorAnnotation.#createAnnotationElement(scaledRect));
     }
-    this.#portal.replaceChildren(...elements);
+    this.#container.replaceChildren(...elements);
     this.#elements = elements;
   }
 

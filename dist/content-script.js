@@ -192,6 +192,35 @@ module.exports = {
 
 /***/ }),
 
+/***/ "./src/components/component.ts":
+/*!*************************************!*\
+  !*** ./src/components/component.ts ***!
+  \*************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Component": () => (/* binding */ Component)
+/* harmony export */ });
+class Component {
+  #eventListeners = [];
+  addEventListener(target, name, handler) {
+    target.addEventListener(name, handler);
+    this.#eventListeners.push({
+      target,
+      name,
+      handler
+    });
+  }
+  disconnect() {
+    for (const handler of this.#eventListeners) handler.target.removeEventListener(handler.name, handler.handler);
+    this.#eventListeners = [];
+  }
+}
+
+/***/ }),
+
 /***/ "./src/components/lint-error-annotation.ts":
 /*!*************************************************!*\
   !*** ./src/components/lint-error-annotation.ts ***!
@@ -206,21 +235,24 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utilities_geometry_rect__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utilities/geometry/rect */ "./src/utilities/geometry/rect.ts");
 /* harmony import */ var _utilities_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utilities/dom */ "./src/utilities/dom/index.ts");
 /* harmony import */ var _utilities_geometry_number_range__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utilities/geometry/number-range */ "./src/utilities/geometry/number-range.ts");
+/* harmony import */ var _component__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./component */ "./src/components/component.ts");
 
 
 
-class LintErrorAnnotation {
-  #portal = document.createElement("div");
+
+class LintErrorAnnotation extends _component__WEBPACK_IMPORTED_MODULE_3__.Component {
+  #container = document.createElement("div");
   #editor;
   #elements = [];
   #indexRange;
   constructor(error, editor, portal) {
+    super();
     this.#editor = editor;
     this.name = error.ruleNames?.slice(0, 2).join(": ") ?? "";
     this.description = error.ruleDescription ?? "";
     this.details = error.errorDetail ?? "";
     this.lineNumber = error.lineNumber;
-    portal.appendChild(this.#portal);
+    portal.appendChild(this.#container);
     const markdown = editor.value;
     const [line = "", ...prevLines] = markdown.split("\n").slice(0, this.lineNumber).reverse();
     const startCol = (error.errorRange?.[0] ?? 1) - 1;
@@ -231,7 +263,8 @@ class LintErrorAnnotation {
     this.recalculatePosition();
   }
   disconnect() {
-    this.#portal.remove();
+    super.disconnect();
+    this.#container.remove();
   }
   getTooltipPosition() {
     const domRect = this.#elements.at(-1)?.getBoundingClientRect();
@@ -265,7 +298,7 @@ class LintErrorAnnotation {
       const scaledRect = absoluteRect.scaleY(lineHeight / absoluteRect.height);
       elements.push(LintErrorAnnotation.#createAnnotationElement(scaledRect));
     }
-    this.#portal.replaceChildren(...elements);
+    this.#container.replaceChildren(...elements);
     this.#elements = elements;
   }
   static #createAnnotationElement(rect) {
@@ -295,20 +328,23 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "LintErrorTooltip": () => (/* binding */ LintErrorTooltip)
 /* harmony export */ });
+/* harmony import */ var _component__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./component */ "./src/components/component.ts");
 //@ts-check
 
 
-class LintErrorTooltip {
+
+class LintErrorTooltip extends _component__WEBPACK_IMPORTED_MODULE_0__.Component {
   #description = LintErrorTooltip.#createDescriptionElement();
   #details = LintErrorTooltip.#createDetailsElement();
   #name = LintErrorTooltip.#createNameElement();
   #tooltip = LintErrorTooltip.#createTooltipElement(LintErrorTooltip.#createPrefixElement(), this.#description, this.#details, this.#name);
   constructor() {
-    document.addEventListener("keydown", e => this.#onGlobalKeydown(e));
+    super();
+    this.addEventListener(document, "keydown", e => this.#onGlobalKeydown(e));
     document.body.appendChild(this.#tooltip);
   }
   disconnect() {
-    document.removeEventListener("keydown", e => this.#onGlobalKeydown(e));
+    super.disconnect();
     this.#tooltip.remove();
   }
   show(nameText, descriptionText, detailsText, {
@@ -387,6 +423,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utilities_lint_markdown__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utilities/lint-markdown */ "./src/utilities/lint-markdown.ts");
 /* harmony import */ var _lint_error_annotation__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./lint-error-annotation */ "./src/components/lint-error-annotation.ts");
 /* harmony import */ var _utilities_geometry_vector__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utilities/geometry/vector */ "./src/utilities/geometry/vector.ts");
+/* harmony import */ var _component__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./component */ "./src/components/component.ts");
 // @ts-check
 
 
@@ -396,31 +433,33 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-class LintedMarkdownEditor {
+
+class LintedMarkdownEditor extends _component__WEBPACK_IMPORTED_MODULE_5__.Component {
   #textarea;
+  #tooltip;
   #annotationsPortal = document.createElement("div");
   #statusContainer = LintedMarkdownEditor.#createStatusContainerElement();
   #resizeObserver;
   #characterCoordinatesCalculator;
-  #tooltip;
   #_tooltipAnnotation = null;
   #_annotations = [];
   constructor(textarea, portal, tooltip) {
+    super();
     this.#textarea = textarea;
     this.#tooltip = tooltip;
     portal.append(this.#annotationsPortal, this.#statusContainer);
-    this.#textarea.addEventListener("input", this.#onUpdate);
-    this.#textarea.addEventListener("focus", this.#onUpdate);
-    this.#textarea.addEventListener("scroll", this.#onReposition);
-    this.#textarea.addEventListener("blur", this.#onBlur);
-    this.#textarea.addEventListener("mousemove", this.#onMouseMove);
-    this.#textarea.addEventListener("mouseleave", this.#onMouseLeave);
+    this.addEventListener(textarea, "input", this.#onUpdate);
+    this.addEventListener(textarea, "focus", this.#onUpdate);
+    this.addEventListener(textarea, "scroll", this.#onReposition);
+    this.addEventListener(textarea, "blur", this.#onBlur);
+    this.addEventListener(textarea, "mousemove", this.#onMouseMove);
+    this.addEventListener(textarea, "mouseleave", this.#onMouseLeave);
 
     // selectionchange can't be bound to the textarea so we have to use the document
-    window.addEventListener("selectionchange", this.#onSelectionChange);
+    this.addEventListener(document, "selectionchange", this.#onSelectionChange);
 
     // annotations are document-relative so we need to observe document resize as well
-    window.addEventListener("resize", this.#onReposition);
+    this.addEventListener(window, "resize", this.#onReposition);
 
     // this does mean it will run twice when the resize causes a resize of the textarea,
     // but we also need the resize observer for the textarea because it's user resizable
@@ -429,14 +468,7 @@ class LintedMarkdownEditor {
     this.#characterCoordinatesCalculator = new _utilities_dom_textarea_range__WEBPACK_IMPORTED_MODULE_0__.TextareaRange(textarea);
   }
   disconnect() {
-    this.#textarea.removeEventListener("input", this.#onUpdate);
-    this.#textarea.removeEventListener("focus", this.#onUpdate);
-    this.#textarea.removeEventListener("scroll", this.#onReposition);
-    this.#textarea.removeEventListener("blur", this.#onBlur);
-    this.#textarea.removeEventListener("mousemove", this.#onMouseMove);
-    this.#textarea.removeEventListener("mouseleave", this.#onMouseLeave);
-    window.removeEventListener("selectionchange", this.#onSelectionChange);
-    window.removeEventListener("resize", this.#onReposition);
+    super.disconnect();
     this.#resizeObserver.disconnect();
     this.#characterCoordinatesCalculator.disconnect();
     this.#tooltip.disconnect();

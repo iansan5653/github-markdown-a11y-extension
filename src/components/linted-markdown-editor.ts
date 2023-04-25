@@ -9,15 +9,17 @@ import {LintErrorTooltip} from "./lint-error-tooltip";
 import {LintErrorAnnotation} from "./lint-error-annotation";
 import {Vector} from "../utilities/geometry/vector";
 import {NumberRange} from "../utilities/geometry/number-range";
+import {Component} from "./component";
 
-export class LintedMarkdownEditor {
+export class LintedMarkdownEditor extends Component {
   #textarea: HTMLTextAreaElement;
+  #tooltip: LintErrorTooltip;
+
   #annotationsPortal = document.createElement("div");
   #statusContainer = LintedMarkdownEditor.#createStatusContainerElement();
 
   #resizeObserver: ResizeObserver;
   #characterCoordinatesCalculator: TextareaRange;
-  #tooltip: LintErrorTooltip;
 
   #_tooltipAnnotation: LintErrorAnnotation | null = null;
   #_annotations: readonly LintErrorAnnotation[] = [];
@@ -27,23 +29,25 @@ export class LintedMarkdownEditor {
     portal: HTMLElement,
     tooltip: LintErrorTooltip
   ) {
+    super();
+
     this.#textarea = textarea;
     this.#tooltip = tooltip;
 
     portal.append(this.#annotationsPortal, this.#statusContainer);
 
-    this.#textarea.addEventListener("input", this.#onUpdate);
-    this.#textarea.addEventListener("focus", this.#onUpdate);
-    this.#textarea.addEventListener("scroll", this.#onReposition);
-    this.#textarea.addEventListener("blur", this.#onBlur);
-    this.#textarea.addEventListener("mousemove", this.#onMouseMove);
-    this.#textarea.addEventListener("mouseleave", this.#onMouseLeave);
+    this.addEventListener(textarea, "input", this.#onUpdate);
+    this.addEventListener(textarea, "focus", this.#onUpdate);
+    this.addEventListener(textarea, "scroll", this.#onReposition);
+    this.addEventListener(textarea, "blur", this.#onBlur);
+    this.addEventListener(textarea, "mousemove", this.#onMouseMove);
+    this.addEventListener(textarea, "mouseleave", this.#onMouseLeave);
 
     // selectionchange can't be bound to the textarea so we have to use the document
-    window.addEventListener("selectionchange", this.#onSelectionChange);
+    this.addEventListener(document, "selectionchange", this.#onSelectionChange);
 
     // annotations are document-relative so we need to observe document resize as well
-    window.addEventListener("resize", this.#onReposition);
+    this.addEventListener(window, "resize", this.#onReposition);
 
     // this does mean it will run twice when the resize causes a resize of the textarea,
     // but we also need the resize observer for the textarea because it's user resizable
@@ -54,15 +58,7 @@ export class LintedMarkdownEditor {
   }
 
   disconnect() {
-    this.#textarea.removeEventListener("input", this.#onUpdate);
-    this.#textarea.removeEventListener("focus", this.#onUpdate);
-    this.#textarea.removeEventListener("scroll", this.#onReposition);
-    this.#textarea.removeEventListener("blur", this.#onBlur);
-    this.#textarea.removeEventListener("mousemove", this.#onMouseMove);
-    this.#textarea.removeEventListener("mouseleave", this.#onMouseLeave);
-
-    window.removeEventListener("selectionchange", this.#onSelectionChange);
-    window.removeEventListener("resize", this.#onReposition);
+    super.disconnect();
 
     this.#resizeObserver.disconnect();
     this.#characterCoordinatesCalculator.disconnect();
