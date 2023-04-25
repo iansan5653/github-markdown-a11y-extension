@@ -1,12 +1,19 @@
 {
-  "name": "Markdown Accessibility Checker for GitHub",
+  "name": "Accessibility Checker for GitHub Markdown",
+  "description": "Highlight accessibility issues as you write Markdown on github.com.",
   "manifest_version": 3,
-  "version": "0.0.1",
+  "version": "0.0.0",
   "content_scripts": [
     {
       "matches": ["https://*.github.com/*"],
       "js": ["dist/content-script.js"]
     }
   ],
-  "host_permissions": ["https://*.github.com/*"]
+  "host_permissions": ["https://*.github.com/*"],
+  "icons": {
+    "128": "assets/icon-128.png"
+  },
+  "homepage_url": "https://github.com/iansan5653/markdown-a11y-extension",
+  "version_name": "Experimental (unversioned)",
+  "minimum_chrome_version": "112"
 }
