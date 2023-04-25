@@ -1,7 +1,4 @@
 {
-  "name": "md-a11y-checker-for-github",
-  "version": "0.0.1",
-  "description": "Lint contents of GitHub Markdown inputs for accessibility issues.",
   "scripts": {
     "build": "webpack",
     "build:watch": "webpack --watch",
@@ -10,7 +7,6 @@
     "check:types": "tsc --noEmit",
     "check": "npm run check:formatting & npm run check:types"
   },
-  "author": "iansan5653@github.com",
   "license": "MIT",
   "dependencies": {
     "@github/markdownlint-github": "^0.3.1",
