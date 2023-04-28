@@ -2,7 +2,7 @@
   "name": "Accessibility Checker for GitHub Markdown",
   "description": "Highlight accessibility issues as you write Markdown on github.com.",
   "manifest_version": 3,
-  "version": "1.0.1",
+  "version": "1.1.0",
   "content_scripts": [
     {
       "matches": ["https://*.github.com/*"],
