@@ -18,9 +18,6 @@ jobs:
       - name: Update version in manifest.json
         run: npx dot-json@1 manifest.json version "${{github.ref_name}}"
 
-      - name: Commit version change
-        uses: stefanzweifel/git-auto-commit-action@v4
-
       - name: Package
         run: npm run package
 
