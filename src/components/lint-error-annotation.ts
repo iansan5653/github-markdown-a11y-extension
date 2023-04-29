@@ -1,7 +1,7 @@
 import {LintedMarkdownEditor} from "./linted-markdown-editor";
 import {Rect} from "../utilities/geometry/rect";
 import {Vector} from "../utilities/geometry/vector";
-import {getWindowScrollVector} from "../utilities/dom";
+import {getWindowScrollVector, isHighContrastMode} from "../utilities/dom";
 import {NumberRange} from "../utilities/geometry/number-range";
 import {Component} from "./component";
 import {LintError} from "../utilities/lint-markdown";
@@ -58,6 +58,7 @@ export class LintErrorAnnotation extends Component {
     if (domRect)
       return new Rect(domRect)
         .asVector("bottom-left")
+        .plus(new Vector(0, 2)) // add some breathing room
         .plus(getWindowScrollVector());
   }
 
@@ -102,8 +103,14 @@ export class LintErrorAnnotation extends Component {
   static #createAnnotationElement(rect: Rect) {
     const annotation = document.createElement("span");
     annotation.style.position = "absolute";
-    annotation.style.backgroundColor = "var(--color-danger-emphasis)";
-    annotation.style.opacity = "0.2";
+    annotation.style.boxSizing = "border-box";
+    // use underline instead of highlight for high contrast
+    if (isHighContrastMode()) {
+      annotation.style.borderBottom = "3px dashed var(--color-danger-fg)";
+    } else {
+      annotation.style.backgroundColor = "var(--color-danger-emphasis)";
+      annotation.style.opacity = "0.2";
+    }
     annotation.style.pointerEvents = "none";
     annotation.style.top = `${rect.top}px`;
     annotation.style.left = `${rect.left}px`;

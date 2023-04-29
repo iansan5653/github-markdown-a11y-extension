@@ -54,7 +54,7 @@ export class LintErrorTooltip extends Component {
     setTimeout(() => {
       if (force || !this.#tooltip.matches(":hover"))
         this.#tooltip.setAttribute("hidden", "true");
-    }, 5);
+    }, 10);
   }
 
   #onGlobalKeydown(event: KeyboardEvent) {
