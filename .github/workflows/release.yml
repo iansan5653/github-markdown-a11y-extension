@@ -1,0 +1,34 @@
+name: Release
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Update version in manifest.json
+        run: npx dot-json@1 manifest.json version "${{github.ref_name}}"
+
+      - name: Commit version change
+        uses: stefanzweifel/git-auto-commit-action@v4
+
+      - name: Package
+        run: npm run package
+
+      - name: Submit to Chrome Web Store
+        run: npx chrome-webstore-upload-cli@2 upload --auto-publish
+        env:
+          SOURCE: dist/extension.zip
+          EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CLIENT_ID: ${{ secrets.CHROME_STORE_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CHROME_STORE_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CHROME_STORE_CLIENT_REFRESH_TOKEN }}
