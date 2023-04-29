@@ -3,7 +3,7 @@
 
 import {Vector} from "../utilities/geometry/vector";
 import {LintError} from "../utilities/lint-markdown";
-import {ChildNode, Component} from "./component";
+import {Component} from "./component";
 
 export class LintErrorTooltip extends Component {
   #tooltip = LintErrorTooltip.#createTooltipElement();
@@ -11,6 +11,7 @@ export class LintErrorTooltip extends Component {
   constructor() {
     super();
     this.addEventListener(document, "keydown", (e) => this.#onGlobalKeydown(e));
+    this.addEventListener(this.#tooltip, "mouseout", () => this.hide());
     document.body.appendChild(this.#tooltip);
   }
 
@@ -48,12 +49,16 @@ export class LintErrorTooltip extends Component {
     this.#tooltip.removeAttribute("hidden");
   }
 
-  hide() {
-    this.#tooltip.setAttribute("hidden", "true");
+  hide(force = false) {
+    // Don't hide if the mouse enters the tooltip (allowing users to copy text)
+    setTimeout(() => {
+      if (force || !this.#tooltip.matches(":hover"))
+        this.#tooltip.setAttribute("hidden", "true");
+    }, 5);
   }
 
   #onGlobalKeydown(event: KeyboardEvent) {
-    if (event.key === "Escape" && !event.defaultPrevented) this.hide();
+    if (event.key === "Escape" && !event.defaultPrevented) this.hide(true);
   }
 
   static #createTooltipElement() {
@@ -68,8 +73,6 @@ export class LintErrorTooltip extends Component {
     element.style.borderRadius = "6px";
     element.style.boxShadow = "var(--color-shadow-medium)";
     element.style.position = "absolute";
-    element.style.pointerEvents = "none";
-    element.style.userSelect = "none";
     element.style.width = "350px";
     element.style.display = "flex";
     element.style.flexDirection = "column";
