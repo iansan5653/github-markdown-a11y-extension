@@ -33,3 +33,7 @@ Under the hood, the extension is a wrapper around [Markdownlint](https://github.
 For now, the set of linting rules is not configurable. In order to minimize friction and distractions, only a small subset of lint rules are enabled. The extension does not try to encourage any sort of style or formatting - it's only here to help you with accessibility and syntax.
 
 **Important:** Requests for new rules and changes to existing rules should be made in either the Markdownlint or Markdownlint-github repositories, not here.
+
+### Releasing
+
+Releasing new changes is as simple as publishing a new GitHub release. Be sure to make the tag name in `X.X.X` form (without a leading `v`).
