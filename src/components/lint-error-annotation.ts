@@ -76,7 +76,7 @@ export class LintErrorAnnotation extends Component {
   }
 
   containsIndex(index: number) {
-    return this.#indexRange.contains(index, "start-inclusive-end-exclusive");
+    return this.#indexRange.contains(index, "inclusive");
   }
 
   recalculatePosition() {
