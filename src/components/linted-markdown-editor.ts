@@ -149,6 +149,9 @@ export class LintedMarkdownEditor extends Component {
   #lint() {
     this.#clear();
 
+    // clear() will not hide the tooltip if the mouse is over it, but if the user is typing then they are not trying to copy content
+    this.#tooltip.hide(true);
+
     if (document.activeElement !== this.#textarea) return;
 
     const errors = lintMarkdown(this.value);
