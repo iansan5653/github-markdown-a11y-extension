@@ -1,15 +1,16 @@
-import { LintError } from "markdownlint";
-import { LintedMarkdownEditor } from "./linted-markdown-editor";
-import { Rect } from "../utilities/geometry/rect";
-import { Vector } from "../utilities/geometry/vector";
-import { getWindowScrollVector } from "../utilities/dom";
-import { NumberRange } from "../utilities/geometry/number-range";
-import { Component } from "./component";
+import {LintedMarkdownEditor} from "./linted-markdown-editor";
+import {Rect} from "../utilities/geometry/rect";
+import {Vector} from "../utilities/geometry/vector";
+import {getWindowScrollVector} from "../utilities/dom";
+import {NumberRange} from "../utilities/geometry/number-range";
+import {Component} from "./component";
+import {LintError} from "../utilities/lint-markdown";
 
 export class LintErrorAnnotation extends Component {
   readonly name: string;
   readonly description: string;
   readonly details: string;
+  readonly justification: string;
   readonly lineNumber: number;
 
   readonly #container: HTMLElement = document.createElement("div");
@@ -31,6 +32,7 @@ export class LintErrorAnnotation extends Component {
     this.name = error.ruleNames?.slice(0, 2).join(": ") ?? "";
     this.description = error.ruleDescription ?? "";
     this.details = error.errorDetail ?? "";
+    this.justification = error.justification ?? "";
     this.lineNumber = error.lineNumber;
 
     portal.appendChild(this.#container);

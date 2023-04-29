@@ -2,14 +2,14 @@
 
 "use strict";
 
-import { TextareaRange } from "../utilities/dom/textarea-range";
-import { formatList } from "../utilities/format";
-import { lintMarkdown } from "../utilities/lint-markdown";
-import { LintErrorTooltip } from "./lint-error-tooltip";
-import { LintErrorAnnotation } from "./lint-error-annotation";
-import { Vector } from "../utilities/geometry/vector";
-import { NumberRange } from "../utilities/geometry/number-range";
-import { Component } from "./component";
+import {TextareaRange} from "../utilities/dom/textarea-range";
+import {formatList} from "../utilities/format";
+import {lintMarkdown} from "../utilities/lint-markdown";
+import {LintErrorTooltip} from "./lint-error-tooltip";
+import {LintErrorAnnotation} from "./lint-error-annotation";
+import {Vector} from "../utilities/geometry/vector";
+import {NumberRange} from "../utilities/geometry/number-range";
+import {Component} from "./component";
 
 export class LintedMarkdownEditor extends Component {
   #textarea: HTMLTextAreaElement;
@@ -120,6 +120,7 @@ export class LintedMarkdownEditor extends Component {
           annotation.name,
           annotation.description,
           annotation.details,
+          annotation.justification,
           position
         );
     } else {
@@ -158,7 +159,7 @@ export class LintedMarkdownEditor extends Component {
 
     if (document.activeElement !== this.#textarea) return;
 
-    const errors = lintMarkdown(this.value) ?? [];
+    const errors = lintMarkdown(this.value);
 
     this.#annotations = errors.map(
       (error) => new LintErrorAnnotation(error, this, this.#annotationsPortal)

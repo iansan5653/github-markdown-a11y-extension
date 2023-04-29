@@ -1,20 +1,16 @@
 //@ts-check
 "use strict";
 
-import { Vector } from "../utilities/geometry/vector";
-import { Component } from "./component";
+import {Vector} from "../utilities/geometry/vector";
+import {Component} from "./component";
 
 export class LintErrorTooltip extends Component {
+  #prefix = LintErrorTooltip.#createPrefixElement();
   #description = LintErrorTooltip.#createDescriptionElement();
   #details = LintErrorTooltip.#createDetailsElement();
+  #justification = LintErrorTooltip.#createJustificationElement();
   #name = LintErrorTooltip.#createNameElement();
-
-  #tooltip = LintErrorTooltip.#createTooltipElement(
-    LintErrorTooltip.#createPrefixElement(),
-    this.#description,
-    this.#details,
-    this.#name
-  );
+  #tooltip = LintErrorTooltip.#createTooltipElement();
 
   constructor() {
     super();
@@ -31,11 +27,21 @@ export class LintErrorTooltip extends Component {
     nameText: string,
     descriptionText: string,
     detailsText: string,
-    { x, y }: Vector
+    justificationText: string,
+    {x, y}: Vector
   ) {
     this.#description.textContent = descriptionText;
     this.#details.textContent = detailsText;
     this.#name.textContent = nameText;
+    this.#justification.textContent = justificationText;
+
+    this.#tooltip.replaceChildren(
+      this.#prefix,
+      this.#description,
+      detailsText && this.#details,
+      justificationText && this.#justification,
+      this.#name
+    );
 
     this.#tooltip.style.top = `${y}px`;
     this.#tooltip.style.left = `${x}px`;
@@ -52,7 +58,7 @@ export class LintErrorTooltip extends Component {
     if (event.key === "Escape" && !event.defaultPrevented) this.hide();
   }
 
-  static #createTooltipElement(...children: HTMLElement[]) {
+  static #createTooltipElement() {
     const tooltip = document.createElement("div");
 
     tooltip.setAttribute("aria-live", "polite");
@@ -67,8 +73,10 @@ export class LintErrorTooltip extends Component {
     tooltip.style.pointerEvents = "none";
     tooltip.style.userSelect = "none";
     tooltip.style.width = "350px";
+    tooltip.style.display = "flex";
+    tooltip.style.flexDirection = "column";
+    tooltip.style.gap = "8px";
 
-    tooltip.replaceChildren(...children);
     return tooltip;
   }
 
@@ -88,7 +96,16 @@ export class LintErrorTooltip extends Component {
   }
 
   static #createDetailsElement() {
-    return document.createElement("div");
+    const details = document.createElement("p");
+    details.style.fontWeight = "bold";
+    details.style.margin = "0";
+    return details;
+  }
+
+  static #createJustificationElement() {
+    const justification = document.createElement("p");
+    justification.style.margin = "0";
+    return justification;
   }
 
   static #createNameElement() {
