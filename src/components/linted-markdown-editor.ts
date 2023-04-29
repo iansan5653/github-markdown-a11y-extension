@@ -106,26 +106,18 @@ export class LintedMarkdownEditor extends Component {
     return this.#_annotations;
   }
 
-  #_tooltipAnnotation: LintErrorAnnotation | null = null;
+  #_tooltipAnnotations: readonly LintErrorAnnotation[] = [];
 
-  set #tooltipAnnotation(annotation: LintErrorAnnotation | null) {
-    if (annotation === this.#_tooltipAnnotation) return;
+  set #tooltipAnnotations(annotations: LintErrorAnnotation[]) {
+    if (annotations === this.#_tooltipAnnotations) return;
 
-    this.#_tooltipAnnotation = annotation;
+    this.#_tooltipAnnotations = annotations;
 
-    if (annotation) {
-      const position = annotation.getTooltipPosition();
-      if (position)
-        this.#tooltip.show(
-          annotation.name,
-          annotation.description,
-          annotation.details,
-          annotation.justification,
-          position
-        );
-    } else {
-      this.#tooltip.hide();
-    }
+    const position = annotations[0]?.getTooltipPosition();
+    const errors = annotations.map(({error}) => error);
+
+    if (position) this.#tooltip.show(errors, position);
+    else this.#tooltip.hide();
   }
 
   #onUpdate = () => this.#lint();
@@ -137,7 +129,7 @@ export class LintedMarkdownEditor extends Component {
   #onMouseMove = (event: MouseEvent) =>
     this.#updatePointerTooltip(new Vector(event.clientX, event.clientY));
 
-  #onMouseLeave = () => (this.#tooltipAnnotation = null);
+  #onMouseLeave = () => (this.#tooltipAnnotations = []);
 
   #onSelectionChange = () => {
     // this event only works when applied to the document but we can filter it by detecting focus
@@ -151,7 +143,7 @@ export class LintedMarkdownEditor extends Component {
     for (const annotation of this.#annotations) annotation.disconnect();
 
     this.#annotations = [];
-    this.#tooltipAnnotation = null;
+    this.#tooltipAnnotations = [];
   }
 
   #lint() {
@@ -173,16 +165,18 @@ export class LintedMarkdownEditor extends Component {
 
   #updatePointerTooltip(pointerLocation: Vector) {
     // can't use mouse events on annotations (the easy way) because they have pointer-events: none
-    this.#tooltipAnnotation =
-      this.#annotations.find((a) => a.containsPoint(pointerLocation)) ?? null;
+    this.#tooltipAnnotations = this.#annotations.filter((a) =>
+      a.containsPoint(pointerLocation)
+    );
   }
 
   #updateCaretTooltip() {
     if (this.#textarea.selectionEnd !== this.#textarea.selectionStart) return;
     const caretIndex = this.#textarea.selectionStart;
 
-    this.#tooltipAnnotation =
-      this.#annotations.find((a) => a.containsIndex(caretIndex)) ?? null;
+    this.#tooltipAnnotations = this.#annotations.filter((a) =>
+      a.containsIndex(caretIndex)
+    );
   }
 
   static #createStatusContainerElement() {

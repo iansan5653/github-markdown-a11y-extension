@@ -21,6 +21,8 @@ type EventListener<in out Name extends EventName> = {
   handler: EventHandler<Name>;
 };
 
+export type ChildNode = string | Node;
+
 export abstract class Component {
   #eventListeners: Array<EventListener<EventName>> = [];
 

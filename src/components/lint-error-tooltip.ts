@@ -2,14 +2,10 @@
 "use strict";
 
 import {Vector} from "../utilities/geometry/vector";
-import {Component} from "./component";
+import {LintError} from "../utilities/lint-markdown";
+import {ChildNode, Component} from "./component";
 
 export class LintErrorTooltip extends Component {
-  #prefix = LintErrorTooltip.#createPrefixElement();
-  #description = LintErrorTooltip.#createDescriptionElement();
-  #details = LintErrorTooltip.#createDetailsElement();
-  #justification = LintErrorTooltip.#createJustificationElement();
-  #name = LintErrorTooltip.#createNameElement();
   #tooltip = LintErrorTooltip.#createTooltipElement();
 
   constructor() {
@@ -23,25 +19,27 @@ export class LintErrorTooltip extends Component {
     this.#tooltip.remove();
   }
 
-  show(
-    nameText: string,
-    descriptionText: string,
-    detailsText: string,
-    justificationText: string,
-    {x, y}: Vector
-  ) {
-    this.#description.textContent = descriptionText;
-    this.#details.textContent = detailsText;
-    this.#name.textContent = nameText;
-    this.#justification.textContent = justificationText;
+  show(errors: LintError[], {x, y}: Vector) {
+    const prefix = LintErrorTooltip.#createPrefixElement(errors.length);
 
-    this.#tooltip.replaceChildren(
-      this.#prefix,
-      this.#description,
-      detailsText && this.#details,
-      justificationText && this.#justification,
-      this.#name
-    );
+    // even though typed as required string, sometimes these properties are missing
+    const errorNodes = errors.map((error, i) => [
+      i !== 0 ? LintErrorTooltip.#createSeparatorElement() : "",
+      LintErrorTooltip.#createDescriptionElement(error.ruleDescription),
+      error.errorDetail
+        ? LintErrorTooltip.#createDetailsElement(error.errorDetail)
+        : "",
+      error.justification
+        ? LintErrorTooltip.#createJustificationElement(error.justification)
+        : "",
+      error.ruleNames?.length
+        ? LintErrorTooltip.#createNameElement(
+            error.ruleNames?.slice(0, 2).join(": ")
+          )
+        : "",
+    ]);
+
+    this.#tooltip.replaceChildren(prefix, ...errorNodes.flat());
 
     this.#tooltip.style.top = `${y}px`;
     this.#tooltip.style.left = `${x}px`;
@@ -59,59 +57,74 @@ export class LintErrorTooltip extends Component {
   }
 
   static #createTooltipElement() {
-    const tooltip = document.createElement("div");
+    const element = document.createElement("div");
 
-    tooltip.setAttribute("aria-live", "polite");
-    tooltip.setAttribute("hidden", "true");
+    element.setAttribute("aria-live", "polite");
+    element.setAttribute("hidden", "true");
 
-    tooltip.style.backgroundColor = "var(--color-canvas-default)";
-    tooltip.style.padding = "8px";
-    tooltip.style.border = "1px solid var(--color-fg-subtle)";
-    tooltip.style.borderRadius = "6px";
-    tooltip.style.boxShadow = "var(--color-shadow-medium)";
-    tooltip.style.position = "absolute";
-    tooltip.style.pointerEvents = "none";
-    tooltip.style.userSelect = "none";
-    tooltip.style.width = "350px";
-    tooltip.style.display = "flex";
-    tooltip.style.flexDirection = "column";
-    tooltip.style.gap = "8px";
+    element.style.backgroundColor = "var(--color-canvas-default)";
+    element.style.padding = "8px";
+    element.style.border = "1px solid var(--color-border-default)";
+    element.style.borderRadius = "6px";
+    element.style.boxShadow = "var(--color-shadow-medium)";
+    element.style.position = "absolute";
+    element.style.pointerEvents = "none";
+    element.style.userSelect = "none";
+    element.style.width = "350px";
+    element.style.display = "flex";
+    element.style.flexDirection = "column";
+    element.style.gap = "8px";
 
-    return tooltip;
+    return element;
   }
 
-  static #createPrefixElement() {
-    const prefix = document.createElement("span");
-    prefix.textContent = "Markdown problem: ";
-    prefix.style.clipPath = "circle(0)";
-    prefix.style.position = "absolute";
-    return prefix;
+  static #createPrefixElement(errorCount: number) {
+    const element = document.createElement("span");
+    element.textContent =
+      errorCount === 1
+        ? "Markdown problem: "
+        : `${errorCount} Markdown problems: `;
+    element.style.clipPath = "circle(0)";
+    element.style.position = "absolute";
+    return element;
   }
 
-  static #createDescriptionElement() {
-    const description = document.createElement("div");
-    description.style.fontWeight = "bold";
-    description.style.color = "var(--color-danger-fg)";
-    return description;
+  static #createDescriptionElement(description: string) {
+    const element = document.createElement("div");
+    element.style.fontWeight = "bold";
+    element.style.color = "var(--color-danger-fg)";
+    element.append(description);
+    return element;
   }
 
-  static #createDetailsElement() {
-    const details = document.createElement("p");
-    details.style.fontWeight = "bold";
-    details.style.margin = "0";
-    return details;
+  static #createDetailsElement(details: string) {
+    const element = document.createElement("p");
+    element.style.fontWeight = "bold";
+    element.style.margin = "0";
+    element.append(details);
+    return element;
   }
 
-  static #createJustificationElement() {
-    const justification = document.createElement("p");
-    justification.style.margin = "0";
-    return justification;
+  static #createJustificationElement(justification: string) {
+    const element = document.createElement("p");
+    element.style.margin = "0";
+    element.append(justification);
+    return element;
   }
 
-  static #createNameElement() {
-    const name = document.createElement("code");
-    name.style.fontSize = "12px";
-    name.style.color = "var(--color-fg-muted)";
-    return name;
+  static #createNameElement(name: string) {
+    const element = document.createElement("code");
+    element.style.fontSize = "12px";
+    element.style.color = "var(--color-fg-muted)";
+    element.append(name);
+    return element;
+  }
+
+  static #createSeparatorElement() {
+    const element = document.createElement("hr");
+    element.style.borderTop = "1px dashed var(--color-border-default)";
+    element.style.borderBottom = "none";
+    element.style.margin = "0";
+    return element;
   }
 }

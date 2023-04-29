@@ -7,10 +7,6 @@ import {Component} from "./component";
 import {LintError} from "../utilities/lint-markdown";
 
 export class LintErrorAnnotation extends Component {
-  readonly name: string;
-  readonly description: string;
-  readonly details: string;
-  readonly justification: string;
   readonly lineNumber: number;
 
   readonly #container: HTMLElement = document.createElement("div");
@@ -21,7 +17,7 @@ export class LintErrorAnnotation extends Component {
   readonly #indexRange: NumberRange;
 
   constructor(
-    error: LintError,
+    readonly error: LintError,
     editor: LintedMarkdownEditor,
     portal: HTMLElement
   ) {
@@ -29,10 +25,6 @@ export class LintErrorAnnotation extends Component {
 
     this.#editor = editor;
 
-    this.name = error.ruleNames?.slice(0, 2).join(": ") ?? "";
-    this.description = error.ruleDescription ?? "";
-    this.details = error.errorDetail ?? "";
-    this.justification = error.justification ?? "";
     this.lineNumber = error.lineNumber;
 
     portal.appendChild(this.#container);
