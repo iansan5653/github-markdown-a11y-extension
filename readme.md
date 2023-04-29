@@ -12,15 +12,15 @@ Simply navigate to the [Chrome Web Store](https://chrome.google.com/webstore/det
 
 For testing while developing this extension:
 
-> **Note**: If you use `git clone` to get the repo and you keep that around after you install the extension, you can get the latest updates with a simple `git pull` then click the 'Refresh' button in the chrome://extensions/ page tools.
-
-1. Clone or download this repo.
-2. Navigate to chrome://extensions/.
-3. Flip on "Developer Mode" in the upper right-hand corner.
-4. Select "Load unpacked".
-5. Choose this unzipped repo folder.
-6. Navigate to github.com.
-
+1. Clone the repo
+2. Install dependencies (`npm install`)
+3. Build the extension by running `npm run build` (or `npm run build:watch` to auto-rebuild when you make changes)
+4. Navigate to chrome://extensions/
+5. Flip on "Developer Mode" in the upper right-hand corner
+6. Select "Load unpacked"
+7. Choose repo folder
+8. Navigate to github.com
+9. After making updates, go back to chrome://extensions/ and click the refresh button on the extension
 
 ### Linting rules
 

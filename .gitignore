@@ -1,4 +1,4 @@
 node_modules
 build
-dist/extension.zip
+dist
 .DS_Store
