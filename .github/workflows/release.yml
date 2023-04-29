@@ -22,9 +22,8 @@ jobs:
         run: npm run package
 
       - name: Submit to Chrome Web Store
-        run: npx chrome-webstore-upload-cli@2 upload --auto-publish
+        run: npx chrome-webstore-upload-cli@2 upload --auto-publish --source dist/extension.zip
         env:
-          SOURCE: dist/extension.zip
           EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
           CLIENT_ID: ${{ secrets.CHROME_STORE_CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CHROME_STORE_CLIENT_SECRET }}
