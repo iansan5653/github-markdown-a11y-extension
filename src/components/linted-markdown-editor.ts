@@ -126,7 +126,18 @@ export class LintedMarkdownEditor extends Component {
 
   #onUpdate = () => this.#lint();
 
-  #onReposition = () => this.#recalculateAnnotationPositions();
+  #isOnRepositionTick = false;
+  #onReposition = () => {
+    console.log("onReposition", this.#isOnRepositionTick);
+    if (this.#isOnRepositionTick) return;
+    this.#isOnRepositionTick = true;
+
+    requestAnimationFrame(() => {
+      console.log("Actual onReposition");
+      this.#recalculateAnnotationPositions();
+      this.#isOnRepositionTick = false;
+    });
+  };
 
   #onBlur = () => this.#clear();
 
