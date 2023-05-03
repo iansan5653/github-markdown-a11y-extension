@@ -5,6 +5,9 @@ import {Vector} from "../utilities/geometry/vector";
 import {LintError} from "../utilities/lint-markdown";
 import {Component} from "./component";
 
+const WIDTH = 350;
+const MARGIN = 8;
+
 export class LintErrorTooltip extends Component {
   #tooltip = LintErrorTooltip.#createTooltipElement();
 
@@ -43,8 +46,9 @@ export class LintErrorTooltip extends Component {
     this.#tooltip.replaceChildren(prefix, ...errorNodes.flat());
 
     this.#tooltip.style.top = `${y}px`;
-    this.#tooltip.style.left = `${x}px`;
-    this.#tooltip.style.maxWidth = `${document.body.clientWidth - x - 16}px`;
+
+    const wouldOverflow = x + WIDTH + 2 * MARGIN > document.body.clientWidth;
+    this.#tooltip.style.left = wouldOverflow ? "0" : `${MARGIN}px`;
 
     this.#tooltip.removeAttribute("hidden");
   }
@@ -72,8 +76,11 @@ export class LintErrorTooltip extends Component {
     element.style.border = "1px solid var(--color-border-default)";
     element.style.borderRadius = "6px";
     element.style.boxShadow = "var(--color-shadow-medium)";
+    element.style.boxSizing = "border-box";
     element.style.position = "absolute";
-    element.style.width = "350px";
+    element.style.width = `${WIDTH}px`;
+    element.style.margin = `${MARGIN}px`;
+    element.style.maxWidth = `calc(100vw - ${MARGIN * 2}px)`;
     element.style.display = "flex";
     element.style.flexDirection = "column";
     element.style.gap = "8px";
