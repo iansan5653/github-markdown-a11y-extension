@@ -1,26 +1,12 @@
 ## Markdown Accessibility Checker
 
-Markdown Accessibility Checker is a Chrome extension for validating Markdown in GitHub text editors. It encourages writing accessible valid Markdown when creating issues, pull requests, discussions, and comments.
+Markdown Accessibility Checker is a browser extension for validating Markdown in GitHub text editors. It encourages writing accessible valid Markdown when creating issues, pull requests, discussions, and comments.
 
 ![Issue creation form on github.com with two lint errors visible. One is hovered over, showing a tooltip that says 'heading levels should only increment by one level at a time'](./assets/screenshot.png)
 
 ### Installation
 
 Simply navigate to the [Chrome Web Store](https://chrome.google.com/webstore/detail/accessibility-checker-for/hdonjoppcjfaojggdiliigclajklepdg?hl=en) and install.
-
-#### Manual installation
-
-For testing while developing this extension:
-
-1. Clone the repo
-2. Install dependencies (`npm install`)
-3. Build the extension by running `npm run build` (or `npm run build:watch` to auto-rebuild when you make changes)
-4. Navigate to chrome://extensions/
-5. Flip on "Developer Mode" in the upper right-hand corner
-6. Select "Load unpacked"
-7. Choose repo folder
-8. Navigate to github.com
-9. After making updates, go back to chrome://extensions/ and click the refresh button on the extension
 
 ### Linting rules
 
@@ -34,6 +20,32 @@ For now, the set of linting rules is not configurable. In order to minimize fric
 
 **Important:** Requests for new rules and changes to existing rules should be made in either the Markdownlint or Markdownlint-github repositories, not here.
 
-### Releasing
+### Build Instructions
 
-Releasing new changes is as simple as publishing a new GitHub release. Be sure to make the tag name in `X.X.X` form (without a leading `v`).
+Building this extension requires [Node and npm](https://nodejs.org/en).
+
+First, install dependencies:
+
+```sh
+npm install
+```
+
+Build the distributed JS code into `dist/content-script.js`:
+
+```sh
+npm run build
+```
+
+At this point, you can run the extension in [Firefox](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Your_first_WebExtension#installing) or [Chrome](https://developer.chrome.com/docs/extensions/mv3/getstarted/development-basics/#load-unpacked) as an 'unpacked' extension.
+
+To check the code for issues, run all the checks:
+
+```sh
+npm run check
+```
+
+To prepare for publishing, package the built code into `dist/extension.zip`:
+
+```sh
+npm run package
+```

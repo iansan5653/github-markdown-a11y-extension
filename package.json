@@ -5,8 +5,9 @@
     "format": "prettier --write src/*",
     "check:formatting": "prettier --check src/*",
     "check:types": "tsc --noEmit",
-    "check": "npm run check:formatting & npm run check:types",
-    "package": "npm run check && npm run build && zip dist/extension.zip assets/* manifest.json dist/content-script.js *.md"
+    "check:addon": "npm run package && addons-linter dist/extension.zip",
+    "check": "npm run check:formatting && npm run check:types && npm run check:addon",
+    "package": "npm run build && zip dist/extension.zip assets/* manifest.json dist/content-script.js *.md"
   },
   "license": "MIT",
   "dependencies": {
@@ -22,6 +23,7 @@
     "ts-loader": "^9.4.2",
     "typescript": "^5.0.4",
     "webpack": "^5.80.0",
-    "webpack-cli": "^5.0.1"
+    "webpack-cli": "^5.0.1",
+    "addons-linter": "6.3.0"
   }
 }
