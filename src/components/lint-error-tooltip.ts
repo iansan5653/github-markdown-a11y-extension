@@ -8,11 +8,11 @@ import {Component} from "./component";
 export class LintErrorTooltip extends Component {
   #tooltip = LintErrorTooltip.#createTooltipElement();
 
-  constructor() {
+  constructor(portal: HTMLElement) {
     super();
     this.addEventListener(document, "keydown", (e) => this.#onGlobalKeydown(e));
     this.addEventListener(this.#tooltip, "mouseout", () => this.hide());
-    document.body.appendChild(this.#tooltip);
+    portal.appendChild(this.#tooltip);
   }
 
   disconnect() {

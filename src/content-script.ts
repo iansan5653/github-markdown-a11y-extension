@@ -7,6 +7,7 @@ import {LintedMarkdownEditor} from "./components/linted-markdown-editor";
 import {observeSelector} from "./utilities/dom/observe-selector";
 
 const rootPortal = document.createElement("div");
+rootPortal.style.zIndex = "999";
 document.body.appendChild(rootPortal);
 
 const markdownEditorsSelector =

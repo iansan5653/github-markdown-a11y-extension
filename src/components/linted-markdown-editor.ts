@@ -13,7 +13,7 @@ import {Component} from "./component";
 
 export class LintedMarkdownEditor extends Component {
   #textarea: HTMLTextAreaElement;
-  #tooltip: LintErrorTooltip = new LintErrorTooltip();
+  #tooltip: LintErrorTooltip;
   #resizeObserver: ResizeObserver;
   #characterCoordinatesCalculator: TextareaRange;
 
@@ -46,6 +46,8 @@ export class LintedMarkdownEditor extends Component {
     this.#resizeObserver.observe(textarea);
 
     this.#characterCoordinatesCalculator = new TextareaRange(textarea);
+
+    this.#tooltip = new LintErrorTooltip(portal);
   }
 
   disconnect() {
