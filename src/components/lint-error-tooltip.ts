@@ -119,6 +119,7 @@ export class LintErrorTooltip extends Component {
     const element = document.createElement("code");
     element.style.fontSize = "12px";
     element.style.color = "var(--color-fg-muted)";
+    element.style.backgroundColor = "transparent";
     element.append(name);
     return element;
   }
