@@ -7,17 +7,20 @@ type EventHandler<Name extends EventName> = (
 interface EventDispatcher {
   addEventListener<Name extends EventName>(
     name: Name,
-    handler: EventHandler<Name>
+    handler: EventHandler<Name>,
+    capture?: boolean
   ): void;
   removeEventListener<Name extends EventName>(
     name: Name,
-    handler: EventHandler<Name>
+    handler: EventHandler<Name>,
+    capture?: boolean
   ): void;
 }
 
 type EventListener<in out Name extends EventName> = {
   target: EventDispatcher;
   name: Name;
+  capture?: boolean;
   handler: EventHandler<Name>;
 };
 
@@ -29,19 +32,21 @@ export abstract class Component {
   protected addEventListener<Name extends EventName>(
     target: EventDispatcher,
     name: Name,
-    handler: EventHandler<Name>
+    handler: EventHandler<Name>,
+    capture?: boolean
   ) {
-    target.addEventListener(name, handler);
+    target.addEventListener(name, handler, capture);
     this.#eventListeners.push({
       target,
       name,
+      capture,
       handler,
     } as EventListener<EventName>);
   }
 
   disconnect() {
-    for (const handler of this.#eventListeners)
-      handler.target.removeEventListener(handler.name, handler.handler);
+    for (const {target, name, capture, handler} of this.#eventListeners)
+      target.removeEventListener(name, handler, capture);
 
     this.#eventListeners = [];
   }

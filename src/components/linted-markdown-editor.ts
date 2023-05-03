@@ -29,10 +29,12 @@ export class LintedMarkdownEditor extends Component {
 
     this.addEventListener(textarea, "input", this.#onUpdate);
     this.addEventListener(textarea, "focus", this.#onUpdate);
-    this.addEventListener(textarea, "scroll", this.#onReposition);
     this.addEventListener(textarea, "blur", this.#onBlur);
     this.addEventListener(textarea, "mousemove", this.#onMouseMove);
     this.addEventListener(textarea, "mouseleave", this.#onMouseLeave);
+
+    // capture ancestor scroll events for nested scroll containers
+    this.addEventListener(document, "scroll", this.#onReposition, true);
 
     // selectionchange can't be bound to the textarea so we have to use the document
     this.addEventListener(document, "selectionchange", this.#onSelectionChange);
