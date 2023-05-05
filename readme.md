@@ -6,7 +6,10 @@ Markdown Accessibility Checker is a browser extension for validating Markdown in
 
 ### Installation
 
-Simply navigate to the [Chrome Web Store](https://chrome.google.com/webstore/detail/accessibility-checker-for/hdonjoppcjfaojggdiliigclajklepdg?hl=en) and install.
+Install from your browser's addons store:
+
+- [Chrome or Edge](https://chrome.google.com/webstore/detail/accessibility-checker-for/hdonjoppcjfaojggdiliigclajklepdg)
+- [Firefox](https://addons.mozilla.org/en-US/firefox/addon/a11y-checker-github-md/)
 
 ### Linting rules
 
