@@ -19,12 +19,34 @@ jobs:
         run: npx dot-json@1 manifest.json version "${{github.ref_name}}"
 
       - name: Package
+        id: package
         run: npm run package
+          echo "zip_path=./web-ext-assets/accessibility_checker_for_github_markdown-${{github.ref_name}}.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Upload packaged extension
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ steps.package.outputs.zip_path }}
+          asset_name: extension.zip
+          asset_content_type: application/zip
+
+      # TODO: run publish in parallel as a second job
 
       - name: Submit to Chrome Web Store
-        run: npx chrome-webstore-upload-cli@2 upload --auto-publish --source dist/extension.zip
+        run: npx chrome-webstore-upload-cli@2 upload --auto-publish --source ${{ steps.package.outputs.zip_path }}
         env:
           EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
           CLIENT_ID: ${{ secrets.CHROME_STORE_CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CHROME_STORE_CLIENT_SECRET }}
           REFRESH_TOKEN: ${{ secrets.CHROME_STORE_CLIENT_REFRESH_TOKEN }}
+
+      - name: Submit to AMO (Mozilla Add-ons)
+        run: npx web-ext@7 sign --use-submission-api --channel listed
+        continue-on-error: true # This always errors when channel is listed, but it still works ¯\_(ツ)_/¯
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.AMO_API_KEY }}
+          WEB_EXT_API_SECRET: ${{ secrets.AMO_API_SECRET }}
