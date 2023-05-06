@@ -26,6 +26,8 @@ jobs:
 
       - name: Upload packaged extension
         run: gh release upload ${{ github.event.release.tag_name }} ${{ steps.package.outputs.zip_path }} --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       # TODO: run publish in parallel as a second job
 
