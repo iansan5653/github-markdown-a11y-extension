@@ -1,4 +1,4 @@
-## Markdown Accessibility Checker
+## <img src="assets/icon-128.png" height="20px" alt="" /> Markdown Accessibility Checker
 
 Markdown Accessibility Checker is a browser extension for validating Markdown in GitHub text editors. It encourages writing accessible valid Markdown when creating issues, pull requests, discussions, and comments.
 
