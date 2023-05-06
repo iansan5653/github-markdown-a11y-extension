@@ -20,7 +20,8 @@ jobs:
 
       - name: Package
         id: package
-        run: npm run package
+        run: |
+          npm run package
           echo "zip_path=./web-ext-assets/accessibility_checker_for_github_markdown-${{github.ref_name}}.zip" >> "$GITHUB_OUTPUT"
 
       - name: Upload packaged extension
