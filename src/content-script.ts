@@ -2,7 +2,6 @@
 
 "use strict";
 
-import {LintErrorTooltip} from "./components/lint-error-tooltip";
 import {LintedMarkdownEditor} from "./components/linted-markdown-editor";
 import {observeSelector} from "./utilities/dom/observe-selector";
 
