@@ -1,8 +1,10 @@
+<div align="center"><img src="assets/promo.png" alt="Markdown Accessibility Checker app icon; a letter A on a blue background with a subtle down-pointing arrow as a shadow, looking dramatic like a superhero logo." /></div>
+
 ## Markdown Accessibility Checker
 
 Markdown Accessibility Checker is a browser extension for validating Markdown in GitHub text editors. It encourages writing accessible valid Markdown when creating issues, pull requests, discussions, and comments.
 
-![Issue creation form on github.com with two lint errors visible. One is hovered over, showing a tooltip that says 'heading levels should only increment by one level at a time'](./assets/screenshot.png)
+<img alt="Issue creation form on github.com with two lint errors visible. One is hovered over, showing a tooltip that says 'heading levels should only increment by one level at a time'" src="./assets/screenshot.png" width="1000" />
 
 ### Installation
 
