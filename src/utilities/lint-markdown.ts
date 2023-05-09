@@ -13,7 +13,6 @@ export const lintMarkdown = (markdown: string): LintError[] =>
       },
       config: markdownlintGitHub.init({
         default: false,
-        "heading-increment": true,
         "no-reversed-links": true,
         "no-empty-links": true,
       }),

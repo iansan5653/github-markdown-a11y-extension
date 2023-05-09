@@ -19,7 +19,6 @@ Alternatively, you can install a specific version by downloading the correspondi
 
 Under the hood, the extension is a wrapper around [Markdownlint](https://github.com/markdownlint/markdownlint), providing a web-compatible UI for viewing linting errors. The base set of rules comes from [markdownlint-github](https://github.com/github/markdownlint-github). In addition, a few more rules are enabled:
 
-- `heading-increment`: Enforces well-structured headings without skipping levels
 - `no-reversed-links`: Enforces valid link syntax (errors if you accidentally flip the square brackets and parentheses)
 - `no-empty-links`: Ensures all links have some visible link text
 
