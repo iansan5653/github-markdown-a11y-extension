@@ -41,7 +41,6 @@ jobs:
 
       - name: Submit to AMO (Mozilla Add-ons)
         run: npx web-ext@7 sign --use-submission-api --channel listed
-        continue-on-error: true # This always errors when channel is listed, but it still works ¯\_(ツ)_/¯
         env:
           WEB_EXT_API_KEY: ${{ secrets.AMO_API_KEY }}
           WEB_EXT_API_SECRET: ${{ secrets.AMO_API_SECRET }}
