@@ -128,12 +128,10 @@ export class LintedMarkdownEditor extends Component {
 
   #isOnRepositionTick = false;
   #onReposition = () => {
-    console.log("onReposition", this.#isOnRepositionTick);
     if (this.#isOnRepositionTick) return;
     this.#isOnRepositionTick = true;
 
     requestAnimationFrame(() => {
-      console.log("Actual onReposition");
       this.#recalculateAnnotationPositions();
       this.#isOnRepositionTick = false;
     });
