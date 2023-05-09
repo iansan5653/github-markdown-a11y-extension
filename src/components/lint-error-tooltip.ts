@@ -47,8 +47,12 @@ export class LintErrorTooltip extends Component {
 
     this.#tooltip.style.top = `${y}px`;
 
-    const wouldOverflow = x + WIDTH + 2 * MARGIN > document.body.clientWidth;
-    this.#tooltip.style.left = wouldOverflow ? "0" : `${MARGIN}px`;
+    {
+      const availableWidth = document.body.clientWidth - 2 * MARGIN;
+      const rightOverflow = Math.max(x + WIDTH - (availableWidth + MARGIN), 0);
+      this.#tooltip.style.left = `${Math.max(x - rightOverflow, MARGIN)}px`;
+      this.#tooltip.style.maxWidth = `${availableWidth}px`;
+    }
 
     this.#tooltip.removeAttribute("hidden");
   }
@@ -79,8 +83,6 @@ export class LintErrorTooltip extends Component {
     element.style.boxSizing = "border-box";
     element.style.position = "absolute";
     element.style.width = `${WIDTH}px`;
-    element.style.margin = `${MARGIN}px`;
-    element.style.maxWidth = `calc(100vw - ${MARGIN * 2}px)`;
     element.style.display = "flex";
     element.style.flexDirection = "column";
     element.style.gap = "8px";
