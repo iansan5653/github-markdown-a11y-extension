@@ -9,6 +9,8 @@ import {observeSelector} from "./utilities/dom/observe-selector";
 const rootPortal = document.createElement("div");
 rootPortal.style.zIndex = "999";
 rootPortal.style.position = "absolute";
+rootPortal.style.top = "0";
+rootPortal.style.left = "0";
 document.body.appendChild(rootPortal);
 
 const markdownEditorsSelector =
