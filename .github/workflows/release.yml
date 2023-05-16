@@ -40,7 +40,7 @@ jobs:
           REFRESH_TOKEN: ${{ secrets.CHROME_STORE_CLIENT_REFRESH_TOKEN }}
 
       - name: Submit to AMO (Mozilla Add-ons)
-        run: npx web-ext@7 sign --use-submission-api --channel listed --ignore-files .* node_modules web-ext-artifacts src \"assets/!(icon*)\" @types *config* package*
+        run: npx web-ext@7 sign --use-submission-api --channel listed --ignore-files .* node_modules web-ext-artifacts src "assets/!(icon*)" @types *config* package*
         env:
           WEB_EXT_API_KEY: ${{ secrets.AMO_API_KEY }}
           WEB_EXT_API_SECRET: ${{ secrets.AMO_API_SECRET }}
