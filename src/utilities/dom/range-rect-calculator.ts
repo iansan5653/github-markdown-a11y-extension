@@ -204,8 +204,14 @@ export class CodeMirrorRangeRectCalculator implements RangeRectCalculator {
       CodeMirrorRangeRectCalculator.#getAllTextNodes(line)
     );
 
-    const start = this.#getNodeAtOffset(lines, range.start);
-    const end = this.#getNodeAtOffset(lines, range.end);
+    const start = CodeMirrorRangeRectCalculator.#getNodeAtOffset(
+      lines,
+      range.start
+    );
+    const end = CodeMirrorRangeRectCalculator.#getNodeAtOffset(
+      lines,
+      range.end
+    );
 
     if (!start || !end) return [];
 
@@ -231,7 +237,7 @@ export class CodeMirrorRangeRectCalculator implements RangeRectCalculator {
    * @param lines Array of nodes for each line
    * @param offset Offset into the entire text
    */
-  #getNodeAtOffset(
+  static #getNodeAtOffset(
     lines: Node[][],
     offset: number
   ): [node: Node, offsetIntoNode: number] | undefined {
