@@ -2,7 +2,7 @@ import {
   CodeMirrorRangeRectCalculator,
   RangeRectCalculator,
   TextareaRangeRectCalculator,
-} from "../utilities/dom/textarea-range";
+} from "../utilities/dom/range-rect-calculator";
 import {formatList} from "../utilities/format";
 import {lintMarkdown} from "../utilities/lint-markdown";
 import {LintErrorTooltip} from "./lint-error-tooltip";
