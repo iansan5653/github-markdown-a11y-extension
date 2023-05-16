@@ -197,7 +197,6 @@ export class CodeMirrorRangeRectCalculator implements RangeRectCalculator {
   }
 
   getClientRects(range: NumberRange): Rect[] {
-    console.log(range);
     const lineNodes = Array.from(
       this.#element.querySelectorAll(".CodeMirror-line")
     );
@@ -210,9 +209,6 @@ export class CodeMirrorRangeRectCalculator implements RangeRectCalculator {
 
     if (!start || !end) return [];
 
-    console.log(lines);
-    console.log([start[0].textContent, start[1]]);
-    console.log([end[0].textContent, end[1]]);
     this.#range.setStart(...start);
     this.#range.setEnd(...end);
 
