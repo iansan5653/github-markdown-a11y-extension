@@ -1,8 +1,8 @@
-// @ts-check
-
-"use strict";
-
-import {TextareaRange} from "../utilities/dom/textarea-range";
+import {
+  CodeMirrorRangeRectCalculator,
+  RangeRectCalculator,
+  TextareaRangeRectCalculator,
+} from "../utilities/dom/textarea-range";
 import {formatList} from "../utilities/format";
 import {lintMarkdown} from "../utilities/lint-markdown";
 import {LintErrorTooltip} from "./lint-error-tooltip";
@@ -11,27 +11,31 @@ import {Vector} from "../utilities/geometry/vector";
 import {NumberRange} from "../utilities/geometry/number-range";
 import {Component} from "./component";
 
-export class LintedMarkdownEditor extends Component {
-  #textarea: HTMLTextAreaElement;
+export abstract class LintedMarkdownEditor extends Component {
+  #editor: HTMLElement;
   #tooltip: LintErrorTooltip;
   #resizeObserver: ResizeObserver;
-  #characterCoordinatesCalculator: TextareaRange;
+  #rangeRectCalculator: RangeRectCalculator;
 
   #annotationsPortal = document.createElement("div");
   #statusContainer = LintedMarkdownEditor.#createStatusContainerElement();
 
-  constructor(textarea: HTMLTextAreaElement, portal: HTMLElement) {
+  constructor(
+    element: HTMLElement,
+    portal: HTMLElement,
+    rangeRectCalculator: RangeRectCalculator
+  ) {
     super();
 
-    this.#textarea = textarea;
+    this.#editor = element;
+    this.#rangeRectCalculator = rangeRectCalculator;
 
     portal.append(this.#annotationsPortal, this.#statusContainer);
 
-    this.addEventListener(textarea, "input", this.#onUpdate);
-    this.addEventListener(textarea, "focus", this.#onUpdate);
-    this.addEventListener(textarea, "blur", this.#onBlur);
-    this.addEventListener(textarea, "mousemove", this.#onMouseMove);
-    this.addEventListener(textarea, "mouseleave", this.#onMouseLeave);
+    this.addEventListener(element, "focus", this.onUpdate);
+    this.addEventListener(element, "blur", this.#onBlur);
+    this.addEventListener(element, "mousemove", this.#onMouseMove);
+    this.addEventListener(element, "mouseleave", this.#onMouseLeave);
 
     // capture ancestor scroll events for nested scroll containers
     this.addEventListener(document, "scroll", this.#onReposition, true);
@@ -45,9 +49,7 @@ export class LintedMarkdownEditor extends Component {
     // this does mean it will run twice when the resize causes a resize of the textarea,
     // but we also need the resize observer for the textarea because it's user resizable
     this.#resizeObserver = new ResizeObserver(this.#onReposition);
-    this.#resizeObserver.observe(textarea);
-
-    this.#characterCoordinatesCalculator = new TextareaRange(textarea);
+    this.#resizeObserver.observe(element);
 
     this.#tooltip = new LintErrorTooltip(portal);
   }
@@ -56,7 +58,7 @@ export class LintedMarkdownEditor extends Component {
     super.disconnect();
 
     this.#resizeObserver.disconnect();
-    this.#characterCoordinatesCalculator.disconnect();
+    this.#rangeRectCalculator.disconnect();
     this.#tooltip.disconnect();
 
     this.#annotationsPortal.remove();
@@ -68,23 +70,21 @@ export class LintedMarkdownEditor extends Component {
    * multiple rects will be returned.
    */
   getRangeRects(characterIndexes: NumberRange) {
-    return this.#characterCoordinatesCalculator.getClientRects(
-      characterIndexes
-    );
+    return this.#rangeRectCalculator.getClientRects(characterIndexes);
   }
 
   getBoundingClientRect() {
-    return this.#textarea.getBoundingClientRect();
+    return this.#editor.getBoundingClientRect();
   }
 
   getLineHeight() {
-    const parsed = parseInt(getComputedStyle(this.#textarea).lineHeight, 10);
+    const parsed = parseInt(getComputedStyle(this.#editor).lineHeight, 10);
     return Number.isNaN(parsed) ? undefined : parsed;
   }
 
-  get value() {
-    return this.#textarea.value;
-  }
+  abstract get value(): string;
+
+  abstract get caretPosition(): number;
 
   #_annotations: readonly LintErrorAnnotation[] = [];
 
@@ -124,7 +124,7 @@ export class LintedMarkdownEditor extends Component {
     else this.#tooltip.hide();
   }
 
-  #onUpdate = () => this.#lint();
+  protected onUpdate = () => this.#lint();
 
   #isOnRepositionTick = false;
   #onReposition = () => {
@@ -146,7 +146,7 @@ export class LintedMarkdownEditor extends Component {
 
   #onSelectionChange = () => {
     // this event only works when applied to the document but we can filter it by detecting focus
-    if (document.activeElement === this.#textarea) this.#updateCaretTooltip();
+    if (document.activeElement === this.#editor) this.#updateCaretTooltip();
   };
 
   #clear() {
@@ -165,7 +165,7 @@ export class LintedMarkdownEditor extends Component {
     // clear() will not hide the tooltip if the mouse is over it, but if the user is typing then they are not trying to copy content
     this.#tooltip.hide(true);
 
-    if (document.activeElement !== this.#textarea) return;
+    if (document.activeElement !== this.#editor) return;
 
     const errors = lintMarkdown(this.value);
 
@@ -187,11 +187,8 @@ export class LintedMarkdownEditor extends Component {
   }
 
   #updateCaretTooltip() {
-    if (this.#textarea.selectionEnd !== this.#textarea.selectionStart) return;
-    const caretIndex = this.#textarea.selectionStart;
-
     this.#tooltipAnnotations = this.#annotations.filter((a) =>
-      a.containsIndex(caretIndex)
+      a.containsIndex(this.caretPosition)
     );
   }
 
@@ -201,5 +198,65 @@ export class LintedMarkdownEditor extends Component {
     container.style.position = "absolute";
     container.style.clipPath = "circle(0)";
     return container;
+  }
+}
+
+export class LintedMarkdownTextareaEditor extends LintedMarkdownEditor {
+  readonly #textarea: HTMLTextAreaElement;
+
+  constructor(textarea: HTMLTextAreaElement, portal: HTMLElement) {
+    super(textarea, portal, new TextareaRangeRectCalculator(textarea));
+    this.#textarea = textarea;
+    this.addEventListener(textarea, "input", this.onUpdate);
+  }
+
+  get value() {
+    return this.#textarea.value;
+  }
+
+  get caretPosition() {
+    return this.#textarea.selectionEnd !== this.#textarea.selectionStart
+      ? -1
+      : this.#textarea.selectionStart;
+  }
+}
+
+export class LintedMarkdownCodeMirrorEditor extends LintedMarkdownEditor {
+  readonly #element: HTMLElement;
+  readonly #mutationObserver: MutationObserver;
+
+  constructor(element: HTMLElement, portal: HTMLElement) {
+    super(element, portal, new CodeMirrorRangeRectCalculator(element));
+
+    this.#element = element;
+
+    this.#mutationObserver = new MutationObserver(this.onUpdate);
+    this.#mutationObserver.observe(element, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  override disconnect(): void {
+    super.disconnect();
+    this.#mutationObserver.disconnect();
+  }
+
+  get value() {
+    return Array.from(this.#element.querySelectorAll(".CodeMirror-line"))
+      .map((line) => line.textContent)
+      .join("\n");
+  }
+
+  get caretPosition() {
+    const selection = document.getSelection();
+    const range = selection?.getRangeAt(0);
+    if (!range?.collapsed || selection?.rangeCount !== 1) return -1;
+
+    const referenceRange = document.createRange();
+    referenceRange.selectNodeContents(this.#element);
+    referenceRange.setEnd(range.startContainer, range.startOffset);
+
+    return referenceRange.toString().length;
   }
 }
