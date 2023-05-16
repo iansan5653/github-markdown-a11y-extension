@@ -1,8 +1,7 @@
-// @ts-check
-
-"use strict";
-
-import {LintedMarkdownEditor} from "./components/linted-markdown-editor";
+import {
+  LintedMarkdownCodeMirrorEditor,
+  LintedMarkdownTextareaEditor,
+} from "./components/linted-markdown-editor";
 import {observeSelector} from "./utilities/dom/observe-selector";
 
 const rootPortal = document.createElement("div");
@@ -12,13 +11,22 @@ rootPortal.style.top = "0";
 rootPortal.style.left = "0";
 document.body.appendChild(rootPortal);
 
-const markdownEditorsSelector =
-  "textarea.js-paste-markdown, textarea.CommentBox-input, textarea[aria-label='Markdown value']";
+observeSelector(
+  "textarea.js-paste-markdown, textarea.CommentBox-input, textarea[aria-label='Markdown value']",
+  (editor) => {
+    if (!(editor instanceof HTMLTextAreaElement)) return () => {};
 
-observeSelector(markdownEditorsSelector, (editor) => {
-  if (!(editor instanceof HTMLTextAreaElement)) return () => {};
+    const lintedEditor = new LintedMarkdownTextareaEditor(editor, rootPortal);
 
-  const lintedEditor = new LintedMarkdownEditor(editor, rootPortal);
+    return () => lintedEditor.disconnect();
+  }
+);
 
-  return () => lintedEditor.disconnect();
-});
+observeSelector(
+  "file-attachment.js-upload-markdown-image .CodeMirror-code[contenteditable]",
+  (editor) => {
+    const lintedEditor = new LintedMarkdownCodeMirrorEditor(editor, rootPortal);
+
+    return () => lintedEditor.disconnect();
+  }
+);

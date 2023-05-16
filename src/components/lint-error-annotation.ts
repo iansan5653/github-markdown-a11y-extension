@@ -64,7 +64,8 @@ export class LintErrorAnnotation extends Component {
 
   containsPoint(point: Vector) {
     return this.#elements.some((el) =>
-      new Rect(el.getBoundingClientRect()).contains(point)
+      // scale slightly so we don't show two tooltips at touching horizontal edges
+      new Rect(el.getBoundingClientRect()).scaleY(0.99).contains(point)
     );
   }
 
