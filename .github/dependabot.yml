@@ -3,4 +3,6 @@ updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: "weekly"
+      interval: weekly
+    allow:
+      - dependency-type: production
