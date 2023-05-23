@@ -13,7 +13,7 @@
   "license": "MIT",
   "dependencies": {
     "@github/markdownlint-github": "^0.4.1",
-    "markdownlint": "^0.28.1"
+    "markdownlint": "^0.28.2"
   },
   "devDependencies": {
     "@babel/core": "^7.21.8",
