@@ -15,6 +15,10 @@ export const lintMarkdown = (markdown: string): LintError[] =>
         default: false,
         "no-reversed-links": true,
         "no-empty-links": true,
+        // While enforcing a certain unordered list style can be somewhat helpful for making the Markdown source
+        // easier to read with a screen reader, this rule is ultimately too opinionated and noisy to be worth it,
+        // especially because it conflicts with the editor's bulleted list toolbar button.
+        "ul-style": false,
       }),
       handleRuleFailures: true,
       customRules: markdownlintGitHub,
@@ -39,6 +43,4 @@ export const ruleJustifications: Partial<Record<string, string>> = {
     "Using headers to separate sections helps readers use accessibility tools to navigate documents.",
   "ol-prefix":
     "When reading Markdown source code, out-of-order lists make it more difficult for non-sighted users to understand how long a list is.",
-  "ul-style":
-    "While reading Markdown source code, screen readers typically read out asterisks whereas other symbols are ignored or converted to pauses.",
 };
