@@ -13,7 +13,8 @@
   "license": "MIT",
   "dependencies": {
     "@github/markdownlint-github": "^0.4.1",
-    "markdownlint": "^0.31.1"
+    "markdownlint": "^0.31.1",
+    "textarea-range": "^0.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.21.8",
