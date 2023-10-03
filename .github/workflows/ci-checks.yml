@@ -26,7 +26,7 @@ jobs:
         id: package
         run: |
           npm run package
-          echo "zip_path=./web-ext-artifacts/accessibility_checker_for_github_markdown-${{github.ref_name}}.zip" >> "$GITHUB_OUTPUT"
+          echo "zip_path=./web-ext-artifacts/accessibility_checker_for_github_markdown-0.0.0.zip" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@v3
         with:
