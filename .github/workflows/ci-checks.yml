@@ -21,3 +21,15 @@ jobs:
 
       - name: Check types
         run: npm run check:types
+
+      - name: Package preview
+        id: package
+        run: |
+          npm run package
+          echo "zip_path=./web-ext-artifacts/accessibility_checker_for_github_markdown-${{github.ref_name}}.zip" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: extension-preview-package
+          path: ${{ steps.package.outputs.zip_path }}
+
