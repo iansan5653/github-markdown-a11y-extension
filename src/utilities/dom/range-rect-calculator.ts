@@ -1,4 +1,4 @@
-import {InputRange} from "textarea-range";
+import {InputRange} from "dom-input-range";
 import {NumberRange} from "../geometry/number-range";
 import {Rect} from "../geometry/rect";
 

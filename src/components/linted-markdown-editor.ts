@@ -58,7 +58,6 @@ export abstract class LintedMarkdownEditor extends Component {
     super.disconnect();
 
     this.#resizeObserver.disconnect();
-    this.#rangeRectCalculator.disconnect();
     this.#tooltip.disconnect();
 
     this.#annotationsPortal.remove();
