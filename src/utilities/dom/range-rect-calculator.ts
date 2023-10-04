@@ -9,33 +9,20 @@ export interface RangeRectCalculator {
    * exclude the end char.
    */
   getClientRects({start, end}: NumberRange): Rect[];
-  disconnect(): void;
 }
 
-/**
- * The `Range` API doesn't work well with `textarea` elements, so this creates a duplicate
- * element and uses that instead. Provides a limited API wrapping around adjusted `Range`
- * APIs.
- */
 export class TextareaRangeRectCalculator implements RangeRectCalculator {
-  readonly #range: InputRange;
+  readonly #element: HTMLTextAreaElement;
 
   constructor(target: HTMLTextAreaElement) {
-    this.#range = new InputRange(target, 0);
+    this.#element = target;
   }
 
-  /**
-   * Return the viewport-relative client rects of the range. If the range has any line
-   * breaks, this will return multiple rects. Will include the start char and exclude the
-   * end char.
-   */
   getClientRects({start, end}: NumberRange) {
-    this.#range.startOffset = start;
-    this.#range.endOffset = end;
-    return this.#range.getClientRects().map((domRect) => new Rect(domRect));
+    return new InputRange(this.#element, start, end)
+      .getClientRects()
+      .map((domRect) => new Rect(domRect));
   }
-
-  disconnect() {}
 }
 
 export class CodeMirrorRangeRectCalculator implements RangeRectCalculator {
@@ -78,8 +65,6 @@ export class CodeMirrorRangeRectCalculator implements RangeRectCalculator {
       (domRect) => new Rect(domRect)
     );
   }
-
-  disconnect(): void {}
 
   static #getAllTextNodes(node: Node): Node[] {
     const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
