@@ -4,8 +4,12 @@ on:
     types:
       - published
 
+env:
+  package-filename: accessibility_checker_for_github_markdown-${{github.ref_name}}.zip
+
 jobs:
-  release:
+  build:
+    name: Build and upload extension package
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -16,28 +20,41 @@ jobs:
         run: npx dot-json@1 manifest.json version "${{github.ref_name}}"
 
       - name: Build package
-        id: package
-        run: |
-          npm run package
-          echo "zip_path=./web-ext-artifacts/accessibility_checker_for_github_markdown-${{github.ref_name}}.zip" >> "$GITHUB_OUTPUT"
+        run: npm run package
 
-      - name: Upload packaged extension
-        run: gh release upload ${{ github.event.release.tag_name }} ${{ steps.package.outputs.zip_path }} --clobber
+      - name: Upload to release
+        run: gh release upload ${{ github.event.release.tag_name }} ./web-ext-artifacts/${{env.package-filename}} --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # TODO: run publish in parallel as a second job
+      - name: Upload to artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: extension-package
+          path: ./web-ext-artifacts/${{env.package-filename}}
 
-      - name: Submit to Chrome Web Store
-        run: npx chrome-webstore-upload-cli@2 upload --auto-publish --source ${{ steps.package.outputs.zip_path }}
+  publish-chrome:
+    name: Publish to Chrome Web Store
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: extension-package
+          path: web-ext-artifacts
+      - run: npx chrome-webstore-upload-cli@2 upload --auto-publish --source ./web-ext-artifacts/${{env.package-filename}}
         env:
           EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
           CLIENT_ID: ${{ secrets.CHROME_STORE_CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CHROME_STORE_CLIENT_SECRET }}
           REFRESH_TOKEN: ${{ secrets.CHROME_STORE_CLIENT_REFRESH_TOKEN }}
 
-      - name: Submit to AMO (Mozilla Add-ons)
-        run: npx web-ext@7 sign --use-submission-api --channel listed --ignore-files .* node_modules web-ext-artifacts src "assets/!(icon*)" @types *config* package*
+  publish-firefox:
+    name: Publish to AMO (Mozilla Add-ons)
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - run: npx web-ext@7 sign --use-submission-api --channel listed --ignore-files .* node_modules web-ext-artifacts src "assets/!(icon*)" @types *config* package*
         env:
           WEB_EXT_API_KEY: ${{ secrets.AMO_API_KEY }}
           WEB_EXT_API_SECRET: ${{ secrets.AMO_API_SECRET }}
