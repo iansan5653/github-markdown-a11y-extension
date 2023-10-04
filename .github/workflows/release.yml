@@ -9,16 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
       - uses: actions/setup-node@v3
-
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
       - name: Update version in manifest.json
         run: npx dot-json@1 manifest.json version "${{github.ref_name}}"
 
-      - name: Package
+      - name: Build package
         id: package
         run: |
           npm run package

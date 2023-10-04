@@ -1,4 +1,4 @@
-name: CI Checks
+name: Continuous Integration
 
 on:
   push:
@@ -6,30 +6,27 @@ on:
   pull_request:
 
 jobs:
-  build:
+  check-code:
+    name: Check code quality
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
-
       - uses: actions/setup-node@v3
+      - run: npm ci
+      - run: npm run check
 
+  upload-preview-artifact:
+    name: Upload preview artifact
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
       - run: npm ci
 
-      - name: Check code formatting
-        run: npm run check:formatting
-
-      - name: Check types
-        run: npm run check:types
-
-      - name: Package preview
-        id: package
-        run: |
-          npm run package
-          echo "zip_path=./web-ext-artifacts/accessibility_checker_for_github_markdown-0.0.0.zip" >> "$GITHUB_OUTPUT"
+      - name: Build package
+        run: npm run package
 
       - uses: actions/upload-artifact@v3
         with:
           name: extension-preview-package
-          path: ${{ steps.package.outputs.zip_path }}
-
+          path: ./web-ext-artifacts/accessibility_checker_for_github_markdown-0.0.0.zip
