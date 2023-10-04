@@ -59,6 +59,12 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
       - run: npm ci
+
+      - name: Update version in manifest.json
+        run: npx dot-json@1 manifest.json version "${{github.ref_name}}"
+
+      - run: npm run build
+
       - run: npx web-ext@7 sign --use-submission-api --channel listed --ignore-files .* node_modules web-ext-artifacts src "assets/!(icon*)" @types *config* package*
         env:
           WEB_EXT_API_KEY: ${{ secrets.AMO_API_KEY }}
