@@ -55,11 +55,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
+      # Unfortunately web-ext is unable to just sign and publish the existing artifact - we have to rebuild it
       - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
-        with:
-          name: extension-package
-          path: web-ext-artifacts
+      - uses: actions/setup-node@v3
+      - run: npm ci
       - run: npx web-ext@7 sign --use-submission-api --channel listed --ignore-files .* node_modules web-ext-artifacts src "assets/!(icon*)" @types *config* package*
         env:
           WEB_EXT_API_KEY: ${{ secrets.AMO_API_KEY }}
