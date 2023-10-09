@@ -19,9 +19,9 @@ export class TextareaRangeRectCalculator implements RangeRectCalculator {
   }
 
   getClientRects({start, end}: NumberRange) {
-    return new InputRange(this.#element, start, end)
-      .getClientRects()
-      .map((domRect) => new Rect(domRect));
+    return Array.from(
+      new InputRange(this.#element, start, end).getClientRects()
+    ).map((domRect) => new Rect(domRect));
   }
 }
 
