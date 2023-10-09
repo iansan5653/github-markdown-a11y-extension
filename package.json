@@ -14,7 +14,7 @@
   "dependencies": {
     "@github/markdownlint-github": "^0.4.1",
     "markdownlint": "^0.31.1",
-    "dom-input-range": "^0.0.6"
+    "dom-input-range": "^1.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.21.8",
