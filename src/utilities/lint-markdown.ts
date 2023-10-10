@@ -19,6 +19,7 @@ export const lintMarkdown = (markdown: string): LintError[] =>
         // easier to read with a screen reader, this rule is ultimately too opinionated and noisy to be worth it,
         // especially because it conflicts with the editor's bulleted list toolbar button.
         "ul-style": false,
+        "no-empty-alt-text": true,
       }),
       handleRuleFailures: true,
       customRules: markdownlintGitHub,
@@ -43,4 +44,6 @@ export const ruleJustifications: Partial<Record<string, string>> = {
     "Using headers to separate sections helps readers use accessibility tools to navigate documents.",
   "ol-prefix":
     "When reading Markdown source code, out-of-order lists make it more difficult for non-sighted users to understand how long a list is.",
+  "no-empty-alt-text":
+    "Images get wrapped in links on github.com, which can result in an inaccessible link with an empty label if the image has empty alt text.",
 };
