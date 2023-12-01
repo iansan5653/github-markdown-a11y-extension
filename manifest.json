@@ -13,7 +13,7 @@
     "128": "assets/icon-128.png"
   },
   "homepage_url": "https://github.com/iansan5653/markdown-a11y-extension",
-  "minimum_chrome_version": "112",
+  "minimum_chrome_version": "109",
   "browser_specific_settings": {
     "gecko": {
       "id": "markdown-a11y-checker@iansan5653",
