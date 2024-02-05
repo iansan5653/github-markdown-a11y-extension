@@ -1,52 +1,53 @@
-type EventName = keyof GlobalEventHandlersEventMap;
+type EventType = keyof GlobalEventHandlersEventMap;
 
-type EventHandler<Name extends EventName> = (
-  event: GlobalEventHandlersEventMap[Name]
+type EventHandler<Type extends EventType> = (
+  event: GlobalEventHandlersEventMap[Type]
 ) => void;
 
-interface EventDispatcher {
-  addEventListener<Name extends EventName>(
-    name: Name,
-    handler: EventHandler<Name>,
-    capture?: boolean
+interface EventDispatcher extends EventTarget {
+  addEventListener<Type extends EventType>(
+    name: Type,
+    handler: EventHandler<Type>,
+    options?: EventListenerOptions | boolean
   ): void;
-  removeEventListener<Name extends EventName>(
-    name: Name,
-    handler: EventHandler<Name>,
-    capture?: boolean
+  removeEventListener<Type extends EventType>(
+    name: Type,
+    handler: EventHandler<Type>,
+    options?: EventListenerOptions | boolean
   ): void;
 }
 
-type EventListener<in out Name extends EventName> = {
+type EventListener<in out Type extends EventType> = {
   target: EventDispatcher;
-  name: Name;
-  capture?: boolean;
-  handler: EventHandler<Name>;
+  type: Type;
+  options?: EventListenerOptions | boolean;
+  handler: EventHandler<Type>;
 };
 
 export type ChildNode = string | Node;
 
+/** Maintains a list of registered event listeners and unregisters them upon disconnect. */
 export abstract class Component {
-  #eventListeners: Array<EventListener<EventName>> = [];
+  #eventListeners: Array<EventListener<EventType>> = [];
 
-  protected addEventListener<Name extends EventName>(
+  protected addEventListener<Type extends EventType>(
     target: EventDispatcher,
-    name: Name,
-    handler: EventHandler<Name>,
-    capture?: boolean
+    type: Type,
+    handler: EventHandler<Type>,
+    options?: EventListenerOptions | boolean
   ) {
-    target.addEventListener(name, handler, capture);
+    target.addEventListener(type, handler, options);
     this.#eventListeners.push({
       target,
-      name,
-      capture,
+      type,
+      options,
       handler,
-    } as EventListener<EventName>);
+    } as EventListener<EventType>);
   }
 
   disconnect() {
-    for (const {target, name, capture, handler} of this.#eventListeners)
-      target.removeEventListener(name, handler, capture);
+    for (const {target, type, options, handler} of this.#eventListeners)
+      target.removeEventListener(type, handler, options);
 
     this.#eventListeners = [];
   }
