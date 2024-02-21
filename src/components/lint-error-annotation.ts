@@ -5,6 +5,7 @@ import {getWindowScrollVector, isHighContrastMode} from "../utilities/dom";
 import {NumberRange} from "../utilities/geometry/number-range";
 import {Component} from "./component";
 import {LintError} from "../utilities/lint-markdown";
+import {colors} from "../utilities/primer-primitives";
 
 export class LintErrorAnnotation extends Component {
   readonly lineNumber: number;
@@ -107,9 +108,9 @@ export class LintErrorAnnotation extends Component {
     annotation.style.boxSizing = "border-box";
     // use underline instead of highlight for high contrast
     if (isHighContrastMode()) {
-      annotation.style.borderBottom = "3px dashed var(--color-danger-fg)";
+      annotation.style.borderBottom = `3px dashed ${colors.danger.fg}`;
     } else {
-      annotation.style.backgroundColor = "var(--color-danger-emphasis)";
+      annotation.style.backgroundColor = colors.danger.emphasis;
       annotation.style.opacity = "0.2";
     }
     annotation.style.pointerEvents = "none";

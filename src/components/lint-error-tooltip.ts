@@ -1,3 +1,4 @@
+import {colors, shadows} from "../utilities/primer-primitives";
 import {Vector} from "../utilities/geometry/vector";
 import {LintError} from "../utilities/lint-markdown";
 import {Component} from "./component";
@@ -72,11 +73,11 @@ export class LintErrorTooltip extends Component {
     element.setAttribute("aria-live", "polite");
     element.setAttribute("hidden", "true");
 
-    element.style.backgroundColor = "var(--color-canvas-default)";
+    element.style.backgroundColor = colors.background;
     element.style.padding = "8px";
-    element.style.border = "1px solid var(--color-border-default)";
+    element.style.border = `1px solid ${colors.border}`;
     element.style.borderRadius = "6px";
-    element.style.boxShadow = "var(--color-shadow-medium)";
+    element.style.boxShadow = shadows.medium;
     element.style.boxSizing = "border-box";
     element.style.position = "absolute";
     element.style.width = `${WIDTH}px`;
@@ -101,7 +102,7 @@ export class LintErrorTooltip extends Component {
   static #createDescriptionElement(description: string) {
     const element = document.createElement("div");
     element.style.fontWeight = "bold";
-    element.style.color = "var(--color-danger-fg)";
+    element.style.color = colors.danger.fg;
     element.append(description);
     return element;
   }
@@ -124,7 +125,7 @@ export class LintErrorTooltip extends Component {
   static #createNameElement(name: string) {
     const element = document.createElement("code");
     element.style.fontSize = "12px";
-    element.style.color = "var(--color-fg-muted)";
+    element.style.color = colors.muted.fg;
     element.style.backgroundColor = "transparent";
     element.append(name);
     return element;
@@ -132,7 +133,7 @@ export class LintErrorTooltip extends Component {
 
   static #createSeparatorElement() {
     const element = document.createElement("hr");
-    element.style.borderTop = "1px dashed var(--color-border-default)";
+    element.style.borderTop = `1px dashed ${colors.border}`;
     element.style.borderBottom = "none";
     element.style.margin = "0";
     return element;
