@@ -11,16 +11,17 @@ rootPortal.style.top = "0";
 rootPortal.style.left = "0";
 document.body.appendChild(rootPortal);
 
-observeSelector(
-  "textarea.js-paste-markdown, textarea.CommentBox-input, textarea[aria-label='Markdown value']",
-  (editor) => {
-    if (!(editor instanceof HTMLTextAreaElement)) return () => {};
+// the only thing all Markdown inputs on GitHub have in common is a toolbar. So
+// we observe the toolbars, going up to the nearest container that has a textarea.
+observeSelector("markdown-toolbar", (toolbar) => {
+  const editor = toolbar.closest(":has(textarea)")?.querySelector("textarea");
 
-    const lintedEditor = new LintedMarkdownTextareaEditor(editor, rootPortal);
+  if (!editor) return () => {};
 
-    return () => lintedEditor.disconnect();
-  }
-);
+  const lintedEditor = new LintedMarkdownTextareaEditor(editor, rootPortal);
+
+  return () => lintedEditor.disconnect();
+});
 
 observeSelector(
   "file-attachment.js-upload-markdown-image .CodeMirror-code[contenteditable]",
