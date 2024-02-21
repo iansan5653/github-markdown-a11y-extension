@@ -27,4 +27,4 @@ export default {
           });
       }
   },
-} as const satisfies Rule;
+} satisfies Rule;
