@@ -4,7 +4,7 @@ import {
   TextareaRangeRectCalculator,
 } from "../utilities/dom/range-rect-calculator";
 import {formatList} from "../utilities/format";
-import {lintMarkdown} from "../utilities/lint-markdown";
+import {MarkdownRenderTarget, lintMarkdown} from "../utilities/lint-markdown";
 import {LintErrorTooltip} from "./lint-error-tooltip";
 import {LintErrorAnnotation} from "./lint-error-annotation";
 import {Vector} from "../utilities/geometry/vector";
@@ -23,7 +23,8 @@ export abstract class LintedMarkdownEditor extends Component {
   constructor(
     element: HTMLElement,
     portal: HTMLElement,
-    rangeRectCalculator: RangeRectCalculator
+    rangeRectCalculator: RangeRectCalculator,
+    readonly markdownRenderTarget: MarkdownRenderTarget
   ) {
     super();
 
@@ -166,7 +167,7 @@ export abstract class LintedMarkdownEditor extends Component {
 
     if (document.activeElement !== this.#editor) return;
 
-    const errors = lintMarkdown(this.value);
+    const errors = lintMarkdown(this.value, this.markdownRenderTarget);
 
     this.#annotations = errors.map(
       (error) => new LintErrorAnnotation(error, this, this.#annotationsPortal)
@@ -204,7 +205,12 @@ export class LintedMarkdownTextareaEditor extends LintedMarkdownEditor {
   readonly #textarea: HTMLTextAreaElement;
 
   constructor(textarea: HTMLTextAreaElement, portal: HTMLElement) {
-    super(textarea, portal, new TextareaRangeRectCalculator(textarea));
+    super(
+      textarea,
+      portal,
+      new TextareaRangeRectCalculator(textarea),
+      "github"
+    );
     this.#textarea = textarea;
     this.addEventListener(textarea, "input", this.onUpdate);
   }
@@ -225,7 +231,12 @@ export class LintedMarkdownCodeMirrorEditor extends LintedMarkdownEditor {
   readonly #mutationObserver: MutationObserver;
 
   constructor(element: HTMLElement, portal: HTMLElement) {
-    super(element, portal, new CodeMirrorRangeRectCalculator(element));
+    super(
+      element,
+      portal,
+      new CodeMirrorRangeRectCalculator(element),
+      "document"
+    );
 
     this.#element = element;
 

@@ -6,7 +6,18 @@ export interface LintError extends markdownlint.LintError {
   justification?: string;
 }
 
-export const lintMarkdown = (markdown: string): LintError[] =>
+export type MarkdownRenderTarget = "github" | "document";
+
+/**
+ * @param markdown The Markdown content to lint.
+ * @param renderTarget The Markdown's 'destination' - where will this content be
+ * rendered? This affects which rules should be enabled as some only apply to
+ * GitHub.com content.
+ */
+export const lintMarkdown = (
+  markdown: string,
+  renderTarget: MarkdownRenderTarget
+): LintError[] =>
   markdownlint
     .sync({
       strings: {
@@ -22,7 +33,9 @@ export const lintMarkdown = (markdown: string): LintError[] =>
         "ul-style": false,
         "no-empty-alt-text": true,
         "start-heading-level": {
-          level: 3,
+          // Don't enforce a start heading level in document mode since this content will often render
+          // outside of GitHub.com.
+          level: renderTarget === "github" ? 3 : 1,
         },
       }),
       handleRuleFailures: true,
