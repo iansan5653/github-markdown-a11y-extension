@@ -1,5 +1,6 @@
 import markdownlint from "markdownlint";
 import markdownlintGitHub from "@github/markdownlint-github";
+import startHeadingLevel from "../rules/start-heading-level";
 
 export interface LintError extends markdownlint.LintError {
   justification?: string;
@@ -20,9 +21,12 @@ export const lintMarkdown = (markdown: string): LintError[] =>
         // especially because it conflicts with the editor's bulleted list toolbar button.
         "ul-style": false,
         "no-empty-alt-text": true,
+        "start-heading-level": {
+          level: 3,
+        },
       }),
       handleRuleFailures: true,
-      customRules: markdownlintGitHub,
+      customRules: [...markdownlintGitHub, startHeadingLevel],
     })
     .content?.map((error) => ({
       ...error,
@@ -46,4 +50,6 @@ export const ruleJustifications: Partial<Record<string, string>> = {
     "When reading Markdown source code, out-of-order lists make it more difficult for non-sighted users to understand how long a list is.",
   "no-empty-alt-text":
     "Images get wrapped in links on github.com, which can result in an inaccessible link with an empty label if the image has empty alt text.",
+  "start-heading-level":
+    "GitHub pages already have level 1 and 2 headings, so Markdown headings should start at level 3 for a well-formed page structure.",
 };
