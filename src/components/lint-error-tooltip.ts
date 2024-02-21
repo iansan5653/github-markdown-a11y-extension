@@ -1,3 +1,4 @@
+import {colors, shadows} from "../utilities/primer-primitives";
 import {Vector} from "../utilities/geometry/vector";
 import {LintError} from "../utilities/lint-markdown";
 import {Component} from "./component";
@@ -72,11 +73,11 @@ export class LintErrorTooltip extends Component {
     element.setAttribute("aria-live", "polite");
     element.setAttribute("hidden", "true");
 
-    element.style.backgroundColor = "var(--color-canvas-default)";
+    element.style.backgroundColor = colors.canvas;
     element.style.padding = "8px";
-    element.style.border = "1px solid var(--color-border-default)";
+    element.style.border = `1px solid ${colors.border}`;
     element.style.borderRadius = "6px";
-    element.style.boxShadow = "var(--color-shadow-medium)";
+    element.style.boxShadow = shadows.medium;
     element.style.boxSizing = "border-box";
     element.style.position = "absolute";
     element.style.width = `${WIDTH}px`;
