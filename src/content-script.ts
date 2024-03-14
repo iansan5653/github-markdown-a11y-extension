@@ -1,3 +1,5 @@
+import '@webcomponents/custom-elements'
+
 import {
   LintedMarkdownCodeMirrorEditor,
   LintedMarkdownTextareaEditor,
