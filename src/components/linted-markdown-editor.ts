@@ -16,6 +16,7 @@ export abstract class LintedMarkdownEditor extends Component {
   #tooltip: LintErrorTooltip;
   #resizeObserver: ResizeObserver;
   #rangeRectCalculator: RangeRectCalculator;
+  #isTyping = false;
 
   #annotationsPortal = document.createElement("div");
   #statusContainer = LintedMarkdownEditor.#createStatusContainerElement();
@@ -124,7 +125,11 @@ export abstract class LintedMarkdownEditor extends Component {
     else this.#tooltip.hide();
   }
 
-  protected onUpdate = () => this.#lint();
+  protected onUpdate = () => {
+    this.#isTyping = true;
+    setTimeout(() => (this.#isTyping = false), 10);
+    this.#lint();
+  };
 
   #isOnRepositionTick = false;
   #onReposition = () => {
@@ -146,7 +151,8 @@ export abstract class LintedMarkdownEditor extends Component {
 
   #onSelectionChange = () => {
     // this event only works when applied to the document but we can filter it by detecting focus
-    if (document.activeElement === this.#editor) this.#updateCaretTooltip();
+    if (!this.#isTyping && document.activeElement === this.#editor)
+      this.#updateCaretTooltip();
   };
 
   #clear() {
