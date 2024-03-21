@@ -181,8 +181,10 @@ export abstract class LintedMarkdownEditor extends Component {
   }
 
   #recalculateAnnotationPositions() {
-    for (const annotation of this.#annotations)
-      annotation.recalculatePosition();
+    requestAnimationFrame(() => {
+      for (const annotation of this.#annotations)
+        annotation.recalculatePosition();
+    });
   }
 
   #updatePointerTooltip(pointerLocation: Vector) {
