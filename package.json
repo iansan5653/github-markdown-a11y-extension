@@ -12,7 +12,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@github/markdownlint-github": "^0.6.2",
+    "@github/markdownlint-github": "^0.6.3",
     "@webcomponents/custom-elements": "^1.6.0",
     "dom-input-range": "^1.1.5",
     "markdownlint": "^0.33.0"
