@@ -14,9 +14,10 @@ export default {
   names: ["start-heading-level"],
   description: "Initial heading level",
   tags: ["accessibility", "images"],
+  parser: "markdownit",
   function(params, onError) {
     const minLevel = getLevelConfig(params);
-    for (const token of params.tokens)
+    for (const token of params.parsers.markdownit.tokens)
       if (token.type === "heading_open") {
         const level = parseHTagLevel(token.tag);
 
