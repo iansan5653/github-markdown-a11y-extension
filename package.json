@@ -14,7 +14,7 @@
   "dependencies": {
     "@github/markdownlint-github": "^0.6.3",
     "@webcomponents/custom-elements": "^1.6.0",
-    "dom-input-range": "^1.1.5",
+    "dom-input-range": "^1.1.6",
     "markdownlint": "^0.34.0"
   },
   "devDependencies": {
