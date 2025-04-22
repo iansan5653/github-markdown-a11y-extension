@@ -1,6 +1,6 @@
 import {InputRange} from "dom-input-range";
-import {NumberRange} from "../geometry/number-range";
-import {Rect} from "../geometry/rect";
+import {NumberRange} from "../geometry/number-range.js";
+import {Rect} from "../geometry/rect.js";
 
 export interface RangeRectCalculator {
   /**

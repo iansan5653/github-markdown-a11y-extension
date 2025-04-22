@@ -4,19 +4,15 @@
     "noImplicitAny": true,
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "module": "es6",
+    "module": "NodeNext",
     "target": "ES2022",
     "allowJs": true,
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
-    "paths": {
-      "*": [
-        "./@types/*"
-      ]
-    }
   },
   "files": [
-    "src/content-script.ts"
+    "src/content-script.ts",
+    "@types/markdownlint-github.d.ts"
   ]
 }

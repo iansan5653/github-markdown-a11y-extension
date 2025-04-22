@@ -1,4 +1,4 @@
-import {Vector} from "../geometry/vector";
+import {Vector} from "../geometry/vector.js";
 
 export const getWindowScrollVector = () =>
   new Vector(window.scrollX, window.scrollY);

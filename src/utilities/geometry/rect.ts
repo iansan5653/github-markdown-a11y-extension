@@ -1,5 +1,5 @@
-import {NumberRange} from "./number-range";
-import {Vector} from "./vector";
+import {NumberRange} from "./number-range.js";
+import {Vector} from "./vector.js";
 
 type RectParams = Pick<DOMRect, "x" | "y" | "height" | "width">;
 

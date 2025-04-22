@@ -2,13 +2,20 @@
 
 "use strict";
 
-const webpack = require("webpack");
-const {name} = require("./manifest.json");
-const safeName = name.replace(/\s/g, "_");
+import webpack from "webpack";
+import manifest from "./manifest.json" with {type: "json"};
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const safeName = manifest.name.replace(/\s/g, "_");
 
 const nodeModulePrefixRe = /^node:/u;
 
-module.exports = [
+
+export default [
   {
     entry: "./src/content-script.ts",
     devtool: false,
@@ -53,6 +60,11 @@ module.exports = [
         util: false,
       },
       extensions: [".tsx", ".ts", ".js"],
+      extensionAlias: {
+        ".js": [".js", ".ts"],
+        ".mjs": [".mjs", ".mts"],
+        ".cjs": [".cjs", ".cts"]
+      }
     },
     mode: "development",
   },
