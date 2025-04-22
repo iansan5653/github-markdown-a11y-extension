@@ -6,7 +6,7 @@
     "format": "prettier --write src/*",
     "check:formatting": "prettier --check src/*",
     "check:types": "tsc --noEmit",
-    "check:addon": "npm run build && web-ext lint",
+    "check:addon": "npm run build && web-ext lint --ignore-files node_modules tsconfig.json webpack.config.js",
     "check": "npm run check:formatting && npm run check:types && npm run check:addon",
     "package": "npm run build && web-ext build --ignore-files .* node_modules web-ext-artifacts src \"assets/!(icon*)\" @types *config* package* --overwrite-dest",
     "start:firefox": "web-ext run"
