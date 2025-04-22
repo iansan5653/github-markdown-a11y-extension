@@ -1,7 +1,7 @@
-import {colors, shadows} from "../utilities/primer-primitives";
-import {Vector} from "../utilities/geometry/vector";
-import {LintError} from "../utilities/lint-markdown";
-import {Component} from "./component";
+import {colors, shadows} from "../utilities/primer-primitives.js";
+import {Vector} from "../utilities/geometry/vector.js";
+import {LintError} from "../utilities/lint-markdown.js";
+import {Component} from "./component.js";
 
 const WIDTH = 350;
 const MARGIN = 8;

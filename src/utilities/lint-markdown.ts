@@ -1,8 +1,9 @@
-import markdownlint from "markdownlint";
+import {lint} from "markdownlint/sync";
+import {LintError as MarkdownLintError} from "markdownlint";
 import markdownlintGitHub from "@github/markdownlint-github";
-import startHeadingLevel from "../rules/start-heading-level";
+import startHeadingLevel from "../rules/start-heading-level.js";
 
-export interface LintError extends markdownlint.LintError {
+export interface LintError extends MarkdownLintError {
   justification?: string;
 }
 
@@ -18,35 +19,33 @@ export const lintMarkdown = (
   markdown: string,
   renderTarget: MarkdownRenderTarget
 ): LintError[] =>
-  markdownlint
-    .sync({
-      strings: {
-        content: markdown,
+  lint({
+    strings: {
+      content: markdown,
+    },
+    config: markdownlintGitHub.init({
+      default: false,
+      "no-reversed-links": true,
+      "no-empty-links": true,
+      // While enforcing a certain unordered list style can be somewhat helpful for making the Markdown source
+      // easier to read with a screen reader, this rule is ultimately too opinionated and noisy to be worth it,
+      // especially because it conflicts with the editor's bulleted list toolbar button.
+      "ul-style": false,
+      "no-empty-alt-text": true,
+      "start-heading-level": {
+        // Don't enforce a start heading level in document mode since this content will often render
+        // outside of GitHub.com.
+        level: renderTarget === "github" ? 3 : 1,
       },
-      config: markdownlintGitHub.init({
-        default: false,
-        "no-reversed-links": true,
-        "no-empty-links": true,
-        // While enforcing a certain unordered list style can be somewhat helpful for making the Markdown source
-        // easier to read with a screen reader, this rule is ultimately too opinionated and noisy to be worth it,
-        // especially because it conflicts with the editor's bulleted list toolbar button.
-        "ul-style": false,
-        "no-empty-alt-text": true,
-        "start-heading-level": {
-          // Don't enforce a start heading level in document mode since this content will often render
-          // outside of GitHub.com.
-          level: renderTarget === "github" ? 3 : 1,
-        },
-      }),
-      handleRuleFailures: true,
-      customRules: [...markdownlintGitHub, startHeadingLevel],
-    })
-    .content?.map((error) => ({
-      ...error,
-      justification: error.ruleNames
-        .map((name) => ruleJustifications[name])
-        .join(" "),
-    })) ?? [];
+    }),
+    handleRuleFailures: true,
+    customRules: [...markdownlintGitHub, startHeadingLevel],
+  }).content?.map((error) => ({
+    ...error,
+    justification: error.ruleNames
+      .map((name) => ruleJustifications[name])
+      .join(" "),
+  })) ?? [];
 
 export const ruleJustifications: Partial<Record<string, string>> = {
   "heading-increment":

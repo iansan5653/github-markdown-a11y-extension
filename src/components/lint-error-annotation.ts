@@ -1,11 +1,14 @@
-import {LintedMarkdownEditor} from "./linted-markdown-editor";
-import {Rect} from "../utilities/geometry/rect";
-import {Vector} from "../utilities/geometry/vector";
-import {getWindowScrollVector, isHighContrastMode} from "../utilities/dom";
-import {NumberRange} from "../utilities/geometry/number-range";
-import {Component} from "./component";
-import {LintError} from "../utilities/lint-markdown";
-import {colors} from "../utilities/primer-primitives";
+import {LintedMarkdownEditor} from "./linted-markdown-editor.js";
+import {Rect} from "../utilities/geometry/rect.js";
+import {Vector} from "../utilities/geometry/vector.js";
+import {
+  getWindowScrollVector,
+  isHighContrastMode,
+} from "../utilities/dom/index.js";
+import {NumberRange} from "../utilities/geometry/number-range.js";
+import {Component} from "./component.js";
+import {LintError} from "../utilities/lint-markdown.js";
+import {colors} from "../utilities/primer-primitives.js";
 
 export class LintErrorAnnotation extends Component {
   readonly lineNumber: number;

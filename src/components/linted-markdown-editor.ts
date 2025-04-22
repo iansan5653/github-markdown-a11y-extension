@@ -2,14 +2,17 @@ import {
   CodeMirrorRangeRectCalculator,
   RangeRectCalculator,
   TextareaRangeRectCalculator,
-} from "../utilities/dom/range-rect-calculator";
-import {formatList} from "../utilities/format";
-import {MarkdownRenderTarget, lintMarkdown} from "../utilities/lint-markdown";
-import {LintErrorTooltip} from "./lint-error-tooltip";
-import {LintErrorAnnotation} from "./lint-error-annotation";
-import {Vector} from "../utilities/geometry/vector";
-import {NumberRange} from "../utilities/geometry/number-range";
-import {Component} from "./component";
+} from "../utilities/dom/range-rect-calculator.js";
+import {formatList} from "../utilities/format.js";
+import {
+  MarkdownRenderTarget,
+  lintMarkdown,
+} from "../utilities/lint-markdown.js";
+import {LintErrorTooltip} from "./lint-error-tooltip.js";
+import {LintErrorAnnotation} from "./lint-error-annotation.js";
+import {Vector} from "../utilities/geometry/vector.js";
+import {NumberRange} from "../utilities/geometry/number-range.js";
+import {Component} from "./component.js";
 
 export abstract class LintedMarkdownEditor extends Component {
   #editor: HTMLElement;

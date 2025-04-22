@@ -1,21 +1,22 @@
 {
+  "type": "module",
   "scripts": {
     "build": "webpack",
     "build:watch": "webpack --watch",
     "format": "prettier --write src/*",
     "check:formatting": "prettier --check src/*",
     "check:types": "tsc --noEmit",
-    "check:addon": "npm run build && web-ext lint",
+    "check:addon": "npm run build && web-ext lint --ignore-files node_modules tsconfig.json webpack.config.js",
     "check": "npm run check:formatting && npm run check:types && npm run check:addon",
     "package": "npm run build && web-ext build --ignore-files .* node_modules web-ext-artifacts src \"assets/!(icon*)\" @types *config* package* --overwrite-dest",
     "start:firefox": "web-ext run"
   },
   "license": "MIT",
   "dependencies": {
-    "@github/markdownlint-github": "^0.6.3",
+    "@github/markdownlint-github": "^0.7.0",
     "@webcomponents/custom-elements": "^1.6.0",
     "dom-input-range": "^2.0.0",
-    "markdownlint": "^0.35.0"
+    "markdownlint": "^0.37.4"
   },
   "devDependencies": {
     "@babel/core": "^7.21.8",

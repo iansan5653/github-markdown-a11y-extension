@@ -3,8 +3,8 @@ import "@webcomponents/custom-elements";
 import {
   LintedMarkdownCodeMirrorEditor,
   LintedMarkdownTextareaEditor,
-} from "./components/linted-markdown-editor";
-import {observeSelector} from "./utilities/dom/observe-selector";
+} from "./components/linted-markdown-editor.js";
+import {observeSelector} from "./utilities/dom/observe-selector.js";
 
 const rootPortal = document.createElement("div");
 rootPortal.style.zIndex = "999";
