@@ -168,7 +168,7 @@ export abstract class LintedMarkdownEditor extends Component {
     this.#tooltipAnnotations = [];
   }
 
-  #lint() {
+  async #lint() {
     this.#clear();
 
     // clear() will not hide the tooltip if the mouse is over it, but if the user is typing then they are not trying to copy content
@@ -176,7 +176,7 @@ export abstract class LintedMarkdownEditor extends Component {
 
     if (document.activeElement !== this.#editor) return;
 
-    const errors = lintMarkdown(this.value, this.markdownRenderTarget);
+    const errors = await lintMarkdown(this.value, this.markdownRenderTarget);
 
     this.#annotations = errors.map(
       (error) => new LintErrorAnnotation(error, this, this.#annotationsPortal)

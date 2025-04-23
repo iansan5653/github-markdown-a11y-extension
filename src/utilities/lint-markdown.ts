@@ -1,6 +1,8 @@
-import {lint} from "markdownlint/sync";
+import {lint} from "markdownlint/promise";
 import {LintError as MarkdownLintError} from "markdownlint";
-import markdownlintGitHub from "@github/markdownlint-github";
+import githubRules, {
+  init as initGitHubConfig,
+} from "@github/markdownlint-github";
 import startHeadingLevel from "../rules/start-heading-level.js";
 
 export interface LintError extends MarkdownLintError {
@@ -15,15 +17,15 @@ export type MarkdownRenderTarget = "github" | "document";
  * rendered? This affects which rules should be enabled as some only apply to
  * GitHub.com content.
  */
-export const lintMarkdown = (
+export const lintMarkdown = async (
   markdown: string,
   renderTarget: MarkdownRenderTarget
-): LintError[] =>
-  lint({
+): Promise<LintError[]> => {
+  const result = await lint({
     strings: {
       content: markdown,
     },
-    config: markdownlintGitHub.init({
+    config: await initGitHubConfig({
       default: false,
       "no-reversed-links": true,
       "no-empty-links": true,
@@ -39,13 +41,18 @@ export const lintMarkdown = (
       },
     }),
     handleRuleFailures: true,
-    customRules: [...markdownlintGitHub, startHeadingLevel],
-  }).content?.map((error) => ({
-    ...error,
-    justification: error.ruleNames
-      .map((name) => ruleJustifications[name])
-      .join(" "),
-  })) ?? [];
+    customRules: [...githubRules, startHeadingLevel],
+  });
+
+  return (
+    result.content?.map((error) => ({
+      ...error,
+      justification: error.ruleNames
+        .map((name) => ruleJustifications[name])
+        .join(" "),
+    })) ?? []
+  );
+};
 
 export const ruleJustifications: Partial<Record<string, string>> = {
   "heading-increment":
